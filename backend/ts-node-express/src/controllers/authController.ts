@@ -87,9 +87,15 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
             }
         })
 
+        const returnNewUser = {
+            name: name,
+            email: email,
+            uuid: uuid
+        }
+
         res.status(201).json({
             message:'User registered',
-            newUser: newUser
+            newUser: returnNewUser
         });
         return
 
@@ -127,10 +133,16 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         const accessToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1h' });
         const refreshToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1d' });
 
+        const returnUser = {
+            name: user.name,
+            email: user.email,
+            uuid: user.uid
+        } 
+
         res
         .cookie('refreshToken', refreshToken, { httpOnly: true, sameSite:'strict' })
         .header('Authorization', accessToken)
-        .json({user: user});
+        .json({user: returnUser});
         return
     }
     catch(error){
@@ -168,5 +180,18 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
 } 
 
 export const logout = (req: Request, res: Response, next: NextFunction) => {
-    
+    try {
+        res.clearCookie('refreshToken', { 
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict'
+        });
+        
+        res.status(200).json({ message: 'Successfully logged out' });
+        return 
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({ message: 'Error during logout process' });
+        return 
+    }
 }
