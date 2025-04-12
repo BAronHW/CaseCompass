@@ -128,7 +128,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 
         const jwtSecret = process.env.JWT_SECRET;
         
-        const accessToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1m' });
+        const accessToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1h' });
         const refreshToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1d' });
 
         const returnUser = {
