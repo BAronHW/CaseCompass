@@ -14,7 +14,6 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         return 
     }
     
-    // More robust token extraction
     const token = authHeader.startsWith('Bearer ') 
         ? authHeader.substring(7).trim()
         : authHeader.trim();
@@ -125,7 +124,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 
         const jwtSecret = process.env.JWT_SECRET;
         
-        const accessToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1m' });
+        const accessToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1h' });
         const refreshToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1d' });
 
         res
@@ -140,5 +139,34 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 }
 
 export const refresh = async (req: Request, res: Response, next: NextFunction) => {
-    
+    // check if the refresh token is valid 
+    // if valid return new access token
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        console.log(req.cookies)
+        if(!refreshToken){
+            res.status(400).json({message: "missing refresh token"});
+            return
+        }
+        const jwtSecret = process.env.JWT_SECRET as string;
+        const isValidRefreshToken = jwt.verify(refreshToken, jwtSecret);
+        if(!isValidRefreshToken){
+            res.status(400).json({message: "invalid refresh token"});
+            return
+        }
+        
+        // @ts-ignore
+        const user = isValidRefreshToken.user;
+        const newAccessToken = jwt.sign(user, jwtSecret);
+        res.status(200).json({newAccessToken});
+        return
+    } catch (error) {
+        res.status(400).json({error})
+        return
+    }
+
 } 
+
+export const logout = (req: Request, res: Response, next: NextFunction) => {
+    
+}
