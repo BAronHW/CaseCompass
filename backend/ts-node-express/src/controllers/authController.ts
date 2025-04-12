@@ -151,8 +151,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 }
 
 export const refresh = async (req: Request, res: Response, next: NextFunction) => {
-    // check if the refresh token is valid 
-    // if valid return new access token
+
     try {
         const refreshToken = req.cookies.refreshToken;
         console.log(req.cookies)
