@@ -4,6 +4,11 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypt from 'crypto';
 import 'dotenv/config';
+/**
+ * TODO:
+ * 1. refactor to use transactions to ensure atomic mutations\
+ * 2. refactor so that instead of using refresh-tokens in cookies
+ */
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
@@ -135,7 +140,16 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
             name: user.name,
             email: user.email,
             uuid: user.uid
-        } 
+        }
+
+        await db.user.update({
+            where:{
+                email: req.body.email
+            },
+            data:{
+                refreshToken: refreshToken
+            }
+        })
 
         res
         .cookie('refreshToken', refreshToken, { httpOnly: true, sameSite:'strict' })
