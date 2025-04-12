@@ -6,7 +6,6 @@ import crypt from 'crypto';
 import 'dotenv/config';
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
-    // Use lowercase when accessing headers
     const authHeader = req.headers.authorization;
     
     if (!authHeader) {
@@ -37,10 +36,10 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         req.user = decodedToken;
         next();
     } catch (error) {
-        if (error instanceof jwt.TokenExpiredError && error instanceof jwt.TokenExpiredError) {
+        if (error instanceof jwt.TokenExpiredError && error instanceof jwt.JsonWebTokenError) {
             res.status(401).json({ message: 'Token has expired' });
             return 
-        } 
+        }
         if (error instanceof jwt.JsonWebTokenError) {
             res.status(401).json({ message: 'Invalid token' });
             return
@@ -117,7 +116,6 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         })
 
         if(!user){
-            console.log("here")
             res.status(401).json({message: 'This user does not exist please register or the credentials you have entered are wrong'})
             return
         }
@@ -130,7 +128,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 
         const jwtSecret = process.env.JWT_SECRET;
         
-        const accessToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1h' });
+        const accessToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1m' });
         const refreshToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1d' });
 
         const returnUser = {
