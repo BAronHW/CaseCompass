@@ -1,9 +1,16 @@
-export interface User {   
-  name: String
-  email: String 
-  Document: Document[]
-  uid: string,
-  password: string
+export interface UserWithPassword {
+  id: number;
+  name: string | null;
+  email: string;
+  password: string;
+  uid: string;
+}
+
+export interface UserWithoutPassword {
+  id: number;
+  name: string | null;
+  email: string;
+  uid: string;
 }
 
 export interface Document {
@@ -11,6 +18,6 @@ export interface Document {
   key: String
   size: number
   name: String
-  user: User
+  user: UserWithPassword
   uid: String
 }
