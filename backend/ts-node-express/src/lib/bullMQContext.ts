@@ -1,9 +1,7 @@
 import { Queue } from 'bullmq';
+import { redisConnection } from './redisConnectionContext';
 
-const myQueue = new Queue('myqueue', {
-  connection: {
-    host: 'myredis.taskforce.run',
-    port: 32856,
-  },
+const myQueue = new Queue('task', {
+  connection: redisConnection,
 });
 
