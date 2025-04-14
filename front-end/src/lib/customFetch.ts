@@ -64,3 +64,5 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
     }
 
 }
+
+export { requestTypeEnum };
