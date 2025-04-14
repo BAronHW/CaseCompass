@@ -26,8 +26,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
       setTheme,
       toggleTheme
     };
-
-    console.log(theme)
   
     return (
       <ThemeContext.Provider value={value}>
