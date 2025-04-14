@@ -1,9 +1,4 @@
-export enum requestTypeEnum {
-    GET,
-    POST,
-    PUT,
-    DELETE
-};
+import { requestTypeEnum } from "../interfacesEnumsAndTypes/enums";
 
 export const customFetch = async (url: string, requestType: requestTypeEnum, accessToken?: string, body?: JSON, includeAccessToken?: boolean) => {
 

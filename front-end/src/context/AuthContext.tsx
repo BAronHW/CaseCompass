@@ -1,8 +1,4 @@
-interface authContextProps {
-    userId : string,
-    uuid : string,
-    loggedIn : boolean,
-}
+import { authContextProps } from "../interfacesEnumsAndTypes/interfaces";
 
 export default function AuthContext(props : authContextProps) {
     const { userId, uuid, loggedIn } = props; //deconstruct the props object

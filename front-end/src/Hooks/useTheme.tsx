@@ -1,15 +1,6 @@
-import { useContext, ReactNode } from 'react';
-import { ThemeContext, ThemeContextType } from '../context/ThemeContext';
-
-export enum ThemeState {
-  DARK,
-  LIGHT
-}
-
-export interface ThemeProviderProps {
-  children: ReactNode;
-  defaultTheme?: ThemeState;
-}
+import { useContext } from 'react';
+import { ThemeContext } from '../context/ThemeContext';
+import { ThemeContextType } from '../interfacesEnumsAndTypes/types';
 
 
 export const useTheme = (): ThemeContextType => {

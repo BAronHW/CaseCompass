@@ -1,13 +1,9 @@
 import { createContext, useState } from "react";
-import { ThemeProviderProps, ThemeState } from "../Hooks/useTheme";
+import { ThemeState } from "../interfacesEnumsAndTypes/enums";
+import { ThemeProviderProps } from "../interfacesEnumsAndTypes/interfaces";
+import { ThemeContextType } from "../interfacesEnumsAndTypes/types";
 
 export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
-
-export type ThemeContextType = {
-  theme: ThemeState;
-  setTheme: React.Dispatch<React.SetStateAction<ThemeState>>;
-  toggleTheme: () => void;
-};
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ 
     children, 
