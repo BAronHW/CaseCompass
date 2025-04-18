@@ -14,6 +14,14 @@ model Document {
   name        String?
   user        User          @relation(fields: [uid], references: [uid])
   uid         String
+  accountTemplate accountTemplate[]
+}
+
+model accountTemplate {
+  id Int @id @default(autoincrement())
+  ownerId Int @unique
+  owner User @relation(fields: [ownerId], references: [id])
+  documentArray Document[]
 }
 
 model User {
@@ -24,4 +32,6 @@ model User {
   uid String @unique @db.VarChar(255)
   password String 
   refreshToken String @unique @default("")
+  accountTemplate accountTemplate[]
 }
+
