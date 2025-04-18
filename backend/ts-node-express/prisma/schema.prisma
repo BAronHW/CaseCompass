@@ -11,7 +11,8 @@ model Document {
   id          Int           @id @default(autoincrement())
   key         String        @unique
   size        Int
-  name        String?
+  title       String? @default("")
+  content     String? @default("")
   user        User          @relation(fields: [uid], references: [uid])
   uid         String
   accountTemplate accountTemplate[]
@@ -20,8 +21,8 @@ model Document {
 
 model documentComments {
   id Int @id @default(autoincrement())
-  title String 
-  content String
+  title String @default("")
+  content String @default("")
   document Document @relation(fields: [documentId], references: [id])
   documentId Int @unique
 }
