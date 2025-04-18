@@ -15,6 +15,15 @@ model Document {
   user        User          @relation(fields: [uid], references: [uid])
   uid         String
   accountTemplate accountTemplate[]
+  documentComments documentComments[]
+}
+
+model documentComments {
+  id Int @id @default(autoincrement())
+  title String 
+  content String
+  document Document @relation(fields: [documentId], references: [id])
+  documentId Int @unique
 }
 
 model accountTemplate {
