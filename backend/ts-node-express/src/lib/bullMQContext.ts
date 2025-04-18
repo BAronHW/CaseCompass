@@ -1,12 +1,12 @@
 import { Queue } from 'bullmq';
 import { redisConnection } from './redisConnectionContext';
 
-const myQueue = new Queue('task', {
+export const jobQueue = new Queue('task', {
   connection: redisConnection,
 });
 
 const addJob = async () => {
-  const job = await myQueue.add('s3Object', {
+  const job = await jobQueue.add('s3Object', {
     file: "sfdasfasfadsfasfadsf",
     name: "test",
     size: 128,
