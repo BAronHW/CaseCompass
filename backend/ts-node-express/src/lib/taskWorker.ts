@@ -4,7 +4,7 @@ import { jobSwitchStatement } from '../functions/taskSwtichStatement';
 import { redisConnection } from './redisConnectionContext';
 dotenv.config();
 
-export const taskWorker = new Worker('tasks', async (job : Job) => {
+const taskWorker = new Worker('documentTasks', async (job : Job) => {
     console.log(`Processing job ${job.id} of type ${job.name}`);
 
     const backgroundTaskResult = await jobSwitchStatement(job.data);
@@ -16,7 +16,6 @@ export const taskWorker = new Worker('tasks', async (job : Job) => {
     concurrency: 5,
 });
 
-taskWorker.run();
 taskWorker.on('completed', job => {
     console.log(`Job ${job.id} completed with result:`, job.returnvalue);
 });
@@ -24,5 +23,9 @@ taskWorker.on('completed', job => {
 taskWorker.on('failed', (job, err) => {
     console.log(`Job ${job?.id} failed with error:`, err.message);
 });
+
+export const startTaskWorker = () => {
+    return taskWorker;
+}
 
 
