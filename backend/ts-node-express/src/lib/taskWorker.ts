@@ -7,7 +7,7 @@ dotenv.config();
 const taskWorker = new Worker('documentTasks', async (job : Job) => {
     console.log(`Processing job ${job.id} of type ${job.name}`);
 
-    const backgroundTaskResult = await jobSwitchStatement(job.data);
+    const backgroundTaskResult = await jobSwitchStatement(job);
 
     return backgroundTaskResult
 
@@ -22,6 +22,7 @@ taskWorker.on('completed', job => {
 
 taskWorker.on('failed', (job, err) => {
     console.log(`Job ${job?.id} failed with error:`, err.message);
+    console.log(`Job ${job?.name}`)
 });
 
 export const startTaskWorker = () => {
