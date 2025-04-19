@@ -91,6 +91,12 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
             }
         })
 
+        await db.accountTemplate.create({
+            data:{
+                ownerId: newUser.id
+            }
+        })
+
         const returnNewUser = {
             name: name,
             email: email,
@@ -113,7 +119,6 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
 export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
     try{
-        console.log(req.body.email)
         const user = await db.user.findUnique({
             where:{
                 email: req.body.email

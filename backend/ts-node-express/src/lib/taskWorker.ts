@@ -5,7 +5,6 @@ import { redisConnection } from './redisConnectionContext';
 dotenv.config();
 
 const taskWorker = new Worker('documentTasks', async (job : Job) => {
-    console.log(`Processing job ${job.id} of type ${job.name}`);
 
     const backgroundTaskResult = await jobSwitchStatement(job);
 

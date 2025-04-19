@@ -9,7 +9,6 @@ import { uploadToS3 } from "./uploadToS3";
 import { categorizePDF } from "./categorizePDF";
 
 export const jobSwitchStatement = async (job: Job) => {
-    console.log('job name: ', job.name, 'and the job data is', job.data)
     switch(job.name){
         case 'analyzePDF':
             return await analyzePDF(job.data);
