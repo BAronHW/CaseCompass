@@ -1,7 +1,7 @@
 import { Queue } from 'bullmq';
 import { redisConnection } from './redisConnectionContext';
 
-export const jobQueue = new Queue('task', {
+export const jobQueue = new Queue('tasks', {
   connection: redisConnection,
   defaultJobOptions: {
     attempts: 3,

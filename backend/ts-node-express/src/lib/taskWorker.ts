@@ -24,3 +24,5 @@ taskWorker.on('completed', job => {
 taskWorker.on('failed', (job, err) => {
     console.log(`Job ${job?.id} failed with error:`, err.message);
 });
+
+

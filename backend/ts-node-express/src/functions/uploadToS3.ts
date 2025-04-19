@@ -4,51 +4,57 @@ import * as crypto from 'crypto';
 import { s3 } from "../lib/s3Context";
 import { db } from "../lib/prismaContext";
 
-export interface uploadToS3JobData {
-    key: string,
-    name: string
-    size: number,
-    uid: string,
+export interface UploadToS3JobData {
+    file: string;
+    name: string;
+    size: number;
+    uid: string;
 }
 
-export const uploadToS3 = async (jobData : JobData) : Promise<uploadToS3JobData> => {
-    /**
-     * this function should take the job data object then turn it into an object and write into an s3 bucket
-     * if successfully uploaded write into db
-     * model Document {
-        key         String
-        size        Int
-        name        String?
-        user        User          @relation(fields: [uid], references: [uid])
-        uid         String
-        accountTemplate accountTemplate[]
-        documentComments documentComments[]
-        }
-     * */
-    const buffer = Buffer.from(jobData.file, 'base64');
-    const randomName = (bytes = 32) => {
-        return crypto.randomBytes(bytes).toString('hex')
-    }
-    const uniqueName = randomName()
-    const params = {
-        Bucket: process.env.BUCKET_NAME,
-        Key: uniqueName,
-        Body: buffer,
-        ContentType: "PDF",
-    }
-    const command = new PutObjectCommand(params)
-    const result = await s3.send(command);
-    console.log(result);
+export interface UploadToS3Result {
+    key: string;
+    name: string;
+    size: number;
+    uid: string;
+}
 
-    const uploadDocument = await db.document.create({
-        data:{
+export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3Result> => {
+    try {
+        if (!jobData.file || !jobData.uid) {
+            throw new Error('Missing required fields: file and uid are required');
+        }
+
+        const buffer = Buffer.from(jobData.file, 'base64');
+        
+        const uniqueName = crypto.randomBytes(32).toString('hex');
+        
+        const params = {
+            Bucket: process.env.BUCKET_NAME,
+            Key: uniqueName,
+            Body: buffer,
+            ContentType: "application/pdf",
+        };
+        
+        const command = new PutObjectCommand(params);
+        await s3.send(command);
+        
+        await db.document.create({
+            data: {
+                key: uniqueName,
+                title: jobData.name,
+                size: jobData.size,
+                uid: jobData.uid,
+            }
+        });
+
+        return {
             key: uniqueName,
-            name:  jobData.name,
+            name: jobData.name,
             size: jobData.size,
             uid: jobData.uid,
-        }
-    })
-
-    return uploadDocument;
-
+        };
+    } catch (error) {
+        console.error('Error in uploadToS3:', error);
+        throw error;
+    }
 }
