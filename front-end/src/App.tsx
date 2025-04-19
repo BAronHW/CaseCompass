@@ -3,6 +3,7 @@ import { useTheme } from "./Hooks/useTheme"
 import { customFetch, requestTypeEnum } from "./lib/customFetch";
 import { ThemeState } from "./interfacesEnumsAndTypes/enums";
 import { ThemeContextType } from "./interfacesEnumsAndTypes/types";
+import DocumentUploader from "./Components/DocumentUploader";
 
 function App() {
   const { theme } : ThemeContextType = useTheme();
@@ -26,7 +27,12 @@ function App() {
   }, [])
 
   return (
-    <div className={`${theme === ThemeState.DARK ? "bg-black" : "bg-white"} min-h-screen w-full h-full`}>App</div>
+    <>
+        <div className={`${theme === ThemeState.DARK ? "bg-black" : "bg-white"} min-h-screen w-full h-full`}>
+          <DocumentUploader />
+        </div>
+        
+    </>
   )
 }
 
