@@ -41,7 +41,12 @@ model User {
   Document    Document[]
   uid String @unique @db.VarChar(255)
   password String 
-  refreshToken String @unique @default("")
+  refreshToken String
   accountTemplate accountTemplate[]
 }
+
+// model documentChunks {
+//   id Int @id @default(autoincrement())
+//   embeddings Unsupported("vector") 
+// }
 

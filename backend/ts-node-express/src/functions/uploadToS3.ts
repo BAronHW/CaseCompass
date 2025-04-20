@@ -37,6 +37,7 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         
         const command = new PutObjectCommand(params);
         await s3.send(command);
+
         
         await db.document.create({
             data: {
