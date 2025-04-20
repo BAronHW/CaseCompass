@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
 const DocumentUploader = () => {
+  const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
@@ -11,6 +13,15 @@ const DocumentUploader = () => {
       setFile(e.target.files[0]);
     }
   };
+
+  const logOut = async () => {
+    const res = await fetch('http://localhost:3000/api/auth/logout', {
+      method: 'POST'
+    })
+    if(res.ok){
+      navigate('/')
+    }
+  }
 
   const uploadDocument = async () => {
     if (!file) {
@@ -31,7 +42,7 @@ const DocumentUploader = () => {
         name: file.name,
         size: file.size,
         file: base64File.split(',')[1], // Remove the data:application/pdf;base64, part
-        uid: '19da49a4-12d7-4372-a175-9f1211e43134' // In a real app, you'd get this from auth context
+        uid: '89de90f6-1d07-485c-8abd-84132c14df3b' // In a real app, you'd get this from auth context
       };
 
       // Simulate upload progress
@@ -51,7 +62,9 @@ const DocumentUploader = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoyLCJuYW1lIjoiYWFyb24iLCJlbWFpbCI6ImFhcm9ud2FuNzA3QGdtYWlsLmNvbSIsInVpZCI6ImUwM2M4MzA2LTRiZTQtNDgwMS04MjA0LTU5NDY0YWFiYmU4MiIsInBhc3N3b3JkIjoiJDJiJDEwJG9TblRuTndEazlOT2pGcThLMy9BYi5RM2QvVTJMUTNTc2F0NHlkRC9RbWg0dklsR1IzSFp1IiwicmVmcmVzaFRva2VuIjoiZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5SWpwN0ltbGtJam95TENKdVlXMWxJam9pWVdGeWIyNGlMQ0psYldGcGJDSTZJbUZoY205dWQyRnVOekEzUUdkdFlXbHNMbU52YlNJc0luVnBaQ0k2SW1Vd00yTTRNekEyTFRSaVpUUXRORGd3TVMwNE1qQTBMVFU1TkRZMFlXRmlZbVU0TWlJc0luQmhjM04zYjNKa0lqb2lKREppSkRFd0pHOVRibFJ1VG5kRWF6bE9UMnBHY1RoTE15OUJZaTVSTTJRdlZUSk1VVE5UYzJGME5IbGtSQzlSYldnMGRrbHNSMUl6U0ZwMUlpd2ljbVZtY21WemFGUnZhMlZ1SWpvaUluMHNJbWxoZENJNk1UYzBOVEF3TkRrMk5Td2laWGh3SWpveE56UTFNRGt4TXpZMWZRLk51bzhLbk9wMVI2blRGcFNSRFdQeF93OHhaV3RGMkNKTDZuTEx4ai1pN3MifSwiaWF0IjoxNzQ1MTYzMzgyLCJleHAiOjE3NDUxNjY5ODJ9.N9cZxr9DkppJ4POjMN9mO2Ki_t-e2uXYE6UNZXwDxMo'
         },
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
 
@@ -82,6 +95,7 @@ const DocumentUploader = () => {
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+      <button onClick={logOut} className='hover:bg-sky-700'>Log Out</button>
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Upload Document</h2>
       
       <div className="mb-4">
