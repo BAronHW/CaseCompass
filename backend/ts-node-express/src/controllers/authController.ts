@@ -90,17 +90,21 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
             return
         }
 
+        const userForToken = {
+            id: user.id,
+            email: user.email
+        }
         const jwtSecret = process.env.JWT_SECRET;
         
-        const accessToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1h' });
-        const refreshToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1d' });
+        const accessToken = jwt.sign({ userForToken }, jwtSecret as string, { expiresIn: '1h' });
+        const refreshToken = jwt.sign({ userForToken }, jwtSecret as string, { expiresIn: '1d' });
 
         const returnUser = {
             name: user.name,
             email: user.email,
-            uid: user.uid
+            uid: user.uid,
+            accessToken
         }
-
 
         await db.user.update({
             where:{
@@ -112,7 +116,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         })
 
         res
-        .cookie('refreshToken', refreshToken, { httpOnly: true, sameSite:'strict' })
+        .cookie('refreshToken', refreshToken, { httpOnly: true, sameSite:'lax'})
         .header('Authorization', accessToken)
         .json({user: returnUser});
         return
@@ -127,7 +131,6 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
 
     try {
         const refreshToken = req.cookies.refreshToken;
-        console.log(req.cookies)
         if(!refreshToken){
             res.status(400).json({message: "missing refresh token"});
             return
@@ -153,16 +156,14 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
 
 export const logout = (req: Request, res: Response, next: NextFunction) => {
     try {
+        console.log(req.headers);
+        console.log(req.cookies);
         res.removeHeader('Authorization');
-        const { Authorization } = req.headers;
-        console.log(Authorization);
         res.clearCookie('refreshToken', { 
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict'
         });
-        const { refreshToken } = req.cookies;
-        console.log(refreshToken);
         
         res.status(200).json({ message: 'Successfully logged out' });
         return 
