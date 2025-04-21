@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import LandingPage from "./Components/LandingPage";
 import LoginPage from "./Components/LoginPage";
 import RegisterPage from "./Components/RegisterPage";
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   const { theme } : ThemeContextType = useTheme();
@@ -13,14 +14,16 @@ function App() {
   return (
     <>
         <div className={`${theme === ThemeState.DARK ? "bg-black" : "bg-white"} min-h-screen w-full h-full`}>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<LandingPage />}/>
-              <Route path="/register" element={<RegisterPage />}/>
-              <Route path="/login" element={<LoginPage />}/>
-              <Route path="/upload" element={<DocumentUploader />}/> 
-            </Routes>
-          </BrowserRouter>
+          <AuthProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<LandingPage />}/>
+                <Route path="/register" element={<RegisterPage />}/>
+                <Route path="/login" element={<LoginPage />}/>
+                <Route path="/upload" element={<DocumentUploader />}/> 
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
         </div>
         
     </>

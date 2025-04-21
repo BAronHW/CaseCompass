@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import useAuth from '../Hooks/useAuth';
 
 const DocumentUploader = () => {
   const navigate = useNavigate();
@@ -7,6 +8,7 @@ const DocumentUploader = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const auth = useAuth();
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -58,13 +60,14 @@ const DocumentUploader = () => {
       }, 100);
 
       // Call API endpoint
+      console.log(auth.accessToken)
       const response = await fetch('http://localhost:3000/api/documents/createDocument', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoyLCJuYW1lIjoiYWFyb24iLCJlbWFpbCI6ImFhcm9ud2FuNzA3QGdtYWlsLmNvbSIsInVpZCI6ImUwM2M4MzA2LTRiZTQtNDgwMS04MjA0LTU5NDY0YWFiYmU4MiIsInBhc3N3b3JkIjoiJDJiJDEwJG9TblRuTndEazlOT2pGcThLMy9BYi5RM2QvVTJMUTNTc2F0NHlkRC9RbWg0dklsR1IzSFp1IiwicmVmcmVzaFRva2VuIjoiZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5SWpwN0ltbGtJam95TENKdVlXMWxJam9pWVdGeWIyNGlMQ0psYldGcGJDSTZJbUZoY205dWQyRnVOekEzUUdkdFlXbHNMbU52YlNJc0luVnBaQ0k2SW1Vd00yTTRNekEyTFRSaVpUUXRORGd3TVMwNE1qQTBMVFU1TkRZMFlXRmlZbVU0TWlJc0luQmhjM04zYjNKa0lqb2lKREppSkRFd0pHOVRibFJ1VG5kRWF6bE9UMnBHY1RoTE15OUJZaTVSTTJRdlZUSk1VVE5UYzJGME5IbGtSQzlSYldnMGRrbHNSMUl6U0ZwMUlpd2ljbVZtY21WemFGUnZhMlZ1SWpvaUluMHNJbWxoZENJNk1UYzBOVEF3TkRrMk5Td2laWGh3SWpveE56UTFNRGt4TXpZMWZRLk51bzhLbk9wMVI2blRGcFNSRFdQeF93OHhaV3RGMkNKTDZuTEx4ai1pN3MifSwiaWF0IjoxNzQ1MTYzMzgyLCJleHAiOjE3NDUxNjY5ODJ9.N9cZxr9DkppJ4POjMN9mO2Ki_t-e2uXYE6UNZXwDxMo'
+          'Authorization': auth.accessToken
         },
-        credentials: 'include',
+        // credentials: 'include', investingate this
         body: JSON.stringify(payload)
       });
 
