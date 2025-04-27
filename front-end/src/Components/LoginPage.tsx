@@ -23,6 +23,7 @@ const LoginPage = () => {
     onSubmit: async (values) => {
         const resp = await fetch('http://localhost:3000/api/auth/login', {
             method: 'POST',
+            credentials: 'include', // oh my god this is why the refresh token was not working
             headers: {
                 'Content-Type': 'application/json',
             },

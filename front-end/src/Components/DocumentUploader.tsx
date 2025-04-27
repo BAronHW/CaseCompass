@@ -18,7 +18,8 @@ const DocumentUploader = () => {
 
   const logOut = async () => {
     const res = await fetch('http://localhost:3000/api/auth/logout', {
-      method: 'POST'
+      method: 'POST',
+      credentials: 'include'
     })
     if(res.ok){
       navigate('/')
@@ -62,6 +63,7 @@ const DocumentUploader = () => {
       // Call API endpoint
       const response = await fetch('http://localhost:3000/api/documents/createDocument', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': auth.accessToken
