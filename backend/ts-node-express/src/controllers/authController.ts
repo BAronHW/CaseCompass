@@ -117,25 +117,9 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         })
 
         res
-        .cookie('refreshToken', refreshToken, { 
-            httpOnly: false, 
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict', 
-            maxAge: 24 * 60 * 60 * 1000,
-            path: '/'
-        })
+        .cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite:'strict', maxAge: 60 * 60 * 1000})
         .header('Authorization', accessToken)
-        .json({
-            user: returnUser,
-            cookieSet: true,
-            cookieOptions: {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                maxAge: 24 * 60 * 60 * 1000,
-                path: '/'
-            }
-        });
+        .json({user: returnUser});
         return
     }
     catch(error){
