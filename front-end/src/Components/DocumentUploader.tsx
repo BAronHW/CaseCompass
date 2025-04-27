@@ -60,7 +60,6 @@ const DocumentUploader = () => {
       }, 100);
 
       // Call API endpoint
-      console.log(auth.accessToken)
       const response = await fetch('http://localhost:3000/api/documents/createDocument', {
         method: 'POST',
         headers: {
@@ -78,6 +77,9 @@ const DocumentUploader = () => {
         setUploadStatus({ success: true, message: 'Document uploaded successfully' });
       } else {
         const errorData = await response.json();
+        if(errorData.message == 'Token has expired'){
+          navigate(errorData.redirect_addr)
+        }
         setUploadStatus({ success: false, message: errorData.message || 'Upload failed' });
       }
     } catch (error) {

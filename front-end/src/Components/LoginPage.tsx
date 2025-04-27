@@ -28,12 +28,10 @@ const LoginPage = () => {
             },
             body: JSON.stringify(values)
         });
-        console.log(resp)
 
         if(resp.ok){
           const data = await resp.json();
           const { user } = data;
-          console.log(user)
           auth.setAccessToken(user.accessToken);
           navigate('/upload')
         }
