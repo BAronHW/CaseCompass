@@ -11,9 +11,27 @@ model Document {
   id          Int           @id @default(autoincrement())
   key         String        @unique
   size        Int
-  name        String?
+  title       String? @default("")
+  content     String? @default("")
   user        User          @relation(fields: [uid], references: [uid])
   uid         String
+  accountTemplate accountTemplate[]
+  documentComments documentComments[]
+}
+
+model documentComments {
+  id Int @id @default(autoincrement())
+  title String @default("")
+  content String @default("")
+  document Document @relation(fields: [documentId], references: [id])
+  documentId Int @unique
+}
+
+model accountTemplate {
+  id Int @id @default(autoincrement())
+  ownerId Int @unique
+  owner User @relation(fields: [ownerId], references: [id])
+  documentArray Document[]
 }
 
 model User {
@@ -23,5 +41,12 @@ model User {
   Document    Document[]
   uid String @unique @db.VarChar(255)
   password String 
-  refreshToken String @unique @default("")
+  refreshToken String
+  accountTemplate accountTemplate[]
 }
+
+// model documentChunks {
+//   id Int @id @default(autoincrement())
+//   embeddings Unsupported("vector") 
+// }
+

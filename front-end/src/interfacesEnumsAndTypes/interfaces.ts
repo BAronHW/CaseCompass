@@ -7,7 +7,6 @@ export interface ThemeProviderProps {
 };
 
 export interface authContextProps {
-    userId : string,
-    uuid : string,
-    loggedIn : boolean,
+    accessToken: string,
+    setAccessToken: React.Dispatch<React.SetStateAction<string>>
 };

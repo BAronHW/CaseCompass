@@ -13,7 +13,7 @@ export const jobSwitchStatement = async (job: Job) => {
         case 'analyzePDF':
             return await analyzePDF(job.data);
         case 'uploadDocumentToS3':
-            return await uploadToS3(job.data);
+            return await uploadToS3(job.data); 
         case 'categorizePDF':
             return await categorizePDF(job.data);
         default:

@@ -1,13 +1,21 @@
+import { createContext, useState } from "react";
 import { authContextProps } from "../interfacesEnumsAndTypes/interfaces";
 
-export default function AuthContext(props : authContextProps) {
-    const { userId, uuid, loggedIn } = props; //deconstruct the props object
-  return (
-    <>
-        <div>AuthContext</div>
-        <div>{userId}</div>
-        <div>{uuid}</div>
-        <div>{loggedIn}</div>
-    </>
-  )
-}
+  export const AuthContext = createContext<authContextProps | undefined>(undefined);
+
+  export const AuthProvider  = ({ children }) => {
+    const [accessToken, setAccessToken] = useState<string>('');
+
+    const authValue = {
+      accessToken,
+      setAccessToken
+    }
+
+    return(
+      <AuthContext.Provider value={authValue}>
+        {children}
+      </AuthContext.Provider>
+    )
+
+  }
+

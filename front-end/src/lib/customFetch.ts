@@ -1,6 +1,6 @@
 import { requestTypeEnum } from "../interfacesEnumsAndTypes/enums";
 
-export const customFetch = async (url: string, requestType: requestTypeEnum, accessToken?: string, body?: JSON, includeAccessToken?: boolean) => {
+export const customFetch = async (url: string, requestType: requestTypeEnum, accessToken?: string, body?: JSON) => {
 
     try{
 
@@ -12,10 +12,10 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
     
                 case requestTypeEnum.POST:
                     return 'POST';
-                
+    
                 case requestTypeEnum.DELETE:
                     return 'DELETE';
-                
+    
                 case requestTypeEnum.PUT:
                     return 'PUT';
     
@@ -38,7 +38,7 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
 
         const options : RequestInit = {
             method: method,
-            headers: includeAccessToken == true ? headerWithToken : headerNoToken
+            headers: accessToken !== null ? headerWithToken : headerNoToken
         }
 
         // GET requests cannot have bodies

@@ -1,6 +1,33 @@
 import { NextFunction, Request, Response } from "express";
+import { jobQueue } from "../lib/bullMQContext";
 
-export const uploadDocument = (req: Request, res: Response, next: NextFunction) => {
+export const uploadDocument = async (req: Request, res: Response, next: NextFunction) => {
+
+    const { name, size, file, uid } = req.body;
+    const refreshToken = req.cookies['refreshToken'];
+    console.log(refreshToken)
+    await jobQueue.add('uploadDocumentToS3', 
+        {
+            name: name, 
+            size: size, 
+            file: file, 
+            uid: uid
+        },
+        {
+            removeOnComplete: {
+                age: 3600,
+                count: 100,
+            },
+            removeOnFail: {
+                age: 24 * 3600
+            }
+        }
+
+    )
+
+    res.status(200).json({message: 'Document has been uploaded successfully'});
+
+    
 
 }
 
