@@ -6,7 +6,7 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
     const authHeader = req.headers.authorization;
     
     if (!authHeader) {
-        res.redirect('/login')
+        res.redirect('http://localhost:5173/login')
         return 
     }
     
@@ -25,16 +25,15 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
     try {
         const decodedToken = jwt.verify(token, jwtSecret) as jwt.JwtPayload;
         
-        if (decodedToken.exp! < Math.floor(Date.now() / 1000)) {
-            res.status(401).json({ message: 'Token has expired' });
-            return 
-        }
          // @ts-ignore
         req.user = decodedToken;
         next();
     } catch (error) {
         if (error instanceof jwt.TokenExpiredError && error instanceof jwt.JsonWebTokenError) {
-            res.status(401).json({ message: 'Token has expired' });
+            res.status(401).json({ 
+                message: 'Token has expired',
+                redirect_addr: '/login'
+            });
             return 
         }
         if (error instanceof jwt.JsonWebTokenError) {

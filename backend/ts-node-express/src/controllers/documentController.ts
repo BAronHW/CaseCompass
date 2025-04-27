@@ -4,7 +4,8 @@ import { jobQueue } from "../lib/bullMQContext";
 export const uploadDocument = async (req: Request, res: Response, next: NextFunction) => {
 
     const { name, size, file, uid } = req.body;
-    console.log('here')
+    const refreshToken = req.cookies['refreshToken'];
+    console.log(refreshToken)
     await jobQueue.add('uploadDocumentToS3', 
         {
             name: name, 
