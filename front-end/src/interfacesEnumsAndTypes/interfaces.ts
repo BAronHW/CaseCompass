@@ -8,5 +8,5 @@ export interface ThemeProviderProps {
 
 export interface authContextProps {
     accessToken: string,
-    setAccessToken: React.Dispatch<React.SetStateAction<string>>
+    setAccessToken: React.Dispatch<React.SetStateAction<object>>
 };

@@ -37,15 +37,14 @@ const DocumentUploader = () => {
     setUploadStatus(null);
 
     try {
-      // Convert file to base64
       const base64File = await toBase64(file);
       
       // Create payload
       const payload = {
         name: file.name,
         size: file.size,
-        file: base64File.split(',')[1], // Remove the data:application/pdf;base64, part
-        uid: '89de90f6-1d07-485c-8abd-84132c14df3b' // In a real app, you'd get this from auth context
+        file: base64File.split(',')[1],
+        uid: '89de90f6-1d07-485c-8abd-84132c14df3b'
       };
 
       // Simulate upload progress
