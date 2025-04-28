@@ -51,7 +51,7 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
 
             if (!currentUser || !currentUser.refreshToken) {
                 res.status(401).json({ 
-                    message: 'No valid refresh token found',
+                    message: 'Token has expired',
                     redirect_addr: '/login'
                 });
                 return;
@@ -73,7 +73,7 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
                 res.setHeader('x-new-token', newAccessToken);
                 next();
             } catch (error) {
-                
+
                 res.status(401).json({
                     message: 'Token has expired',
                     redirect_addr: '/login'
