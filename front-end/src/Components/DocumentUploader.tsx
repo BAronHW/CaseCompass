@@ -75,7 +75,6 @@ const DocumentUploader = () => {
       
       
       if (!response.ok) {
-        // setUploadProgress(100);
         setUploadStatus({ success: false, message: 'Document uploaded unsuccessfully' });
         const errorData = await response.json();
         if(errorData.message === 'Token has expired'){
@@ -86,12 +85,11 @@ const DocumentUploader = () => {
               method: "POST",
               credentials: "include"
             })
-            console.log(response);
             if(!response.ok){
               navigate('/login')
             }
             const respJson = await response.json();
-            console.log(respJson.newAccessToken);
+            sessionStorage.setItem("Authorization", respJson.newAccessToken);
           }catch(error){
             console.log(error)
           }
