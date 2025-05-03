@@ -38,7 +38,8 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
 
         const options : RequestInit = {
             method: method,
-            headers: accessToken !== null ? headerWithToken : headerNoToken
+            headers: accessToken !== null ? headerWithToken : headerNoToken,
+            credentials: 'include'
         }
 
         // GET requests cannot have bodies
@@ -54,6 +55,10 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
 
         if(!response.ok){
             throw new Error(`Response status: ${response.status}`);
+        }
+
+        if(response.status > 400 && response){
+            // refetch the accesstoken
         }
 
         const returnJson = await response.json();
