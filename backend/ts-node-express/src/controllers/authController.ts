@@ -97,7 +97,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
         }
         const jwtSecret = process.env.JWT_SECRET;
         
-        const accessToken = jwt.sign({ userForToken }, jwtSecret as string, { expiresIn: '1h' });
+        const accessToken = jwt.sign({ userForToken }, jwtSecret as string, { expiresIn: '1s' });
         const refreshToken = jwt.sign({ userForToken }, jwtSecret as string, { expiresIn: '1d' });
 
         const returnUser = {
@@ -132,23 +132,29 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
 
     try {
         const refreshToken = req.cookies.refreshToken;
+        console.log(refreshToken)
         if(!refreshToken){
             res.status(400).json({message: "missing refresh token"});
             return
         }
         const jwtSecret = process.env.JWT_SECRET as string;
+        console.log(jwtSecret)
         const isValidRefreshToken = jwt.verify(refreshToken, jwtSecret);
+        console.log(isValidRefreshToken, "is valid refresh token")
         if(!isValidRefreshToken){
             res.status(400).json({message: "invalid refresh token"});
             return
         }
         
         // @ts-ignore
-        const user = isValidRefreshToken.user;
+        const user = isValidRefreshToken.userForToken;
+        console.log(user)
         const newAccessToken = jwt.sign(user, jwtSecret);
+        console.log(newAccessToken)
         res.status(200).json({newAccessToken});
         return
     } catch (error) {
+        console.log(error)
         res.status(400).json({error})
         return
     }
