@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import useAuth from '../Hooks/useAuth';
+import { customFetch, requestTypeEnum } from '../lib/customFetch';
 
 const DocumentUploader = () => {
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ const DocumentUploader = () => {
       method: 'POST',
       credentials: 'include'
     })
+    if(res.ok){
+      sessionStorage.removeItem('Authorization');
+    }
     if(res.ok){
       navigate('/')
     }
@@ -61,46 +65,10 @@ const DocumentUploader = () => {
 
       // TODO:
       // replace this with the custom fetch to automatically do the refetching of the access tokens
-      const response = await fetch('http://localhost:3000/api/documents/createDocument', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': auth.accessToken
-        },
-        body: JSON.stringify(payload)
-      });
-
+      const accessToken = sessionStorage.getItem('Authorization');
+      await customFetch('http://localhost:3000/api/documents/createDocument', requestTypeEnum.POST, accessToken ?? undefined, payload)
       clearInterval(progressInterval);
-      
-      
-      if (!response.ok) {
-        setUploadStatus({ success: false, message: 'Document uploaded unsuccessfully' });
-        const errorData = await response.json();
-        if(errorData.message === 'Token has expired'){
-          // try refreshing the access token using current refresh token if this doesnt work then send to login screen
-          try{
-            // fix this
-            const response = await fetch('http://localhost:3000/api/auth/refresh', {
-              method: "POST",
-              credentials: "include"
-            })
-            if(!response.ok){
-              navigate('/login')
-            }
-            const respJson = await response.json();
-            sessionStorage.setItem("Authorization", respJson.newAccessToken);
-          }catch(error){
-            console.log(error)
-          }
-        }
-      // } else {
-      //   const errorData = await response.json();
-      //   if(errorData.message == 'Token has expired'){
-      //     navigate(errorData.redirect_addr)
-      //   }
-      //   setUploadStatus({ success: false, message: errorData.message || 'Upload failed' });
-      }
+      setUploadStatus({success: true, message: 'Sucessfully uploaded document'})
     } catch (error) {
       console.log(error)
       setUploadStatus({ success: false, message: 'Error uploading document' });

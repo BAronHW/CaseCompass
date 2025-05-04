@@ -23,7 +23,7 @@ const LoginPage = () => {
     onSubmit: async (values) => {
         const resp = await fetch('http://localhost:3000/api/auth/login', {
             method: 'POST',
-            credentials: 'include', // oh my god this is why the refresh token was not working
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -33,6 +33,7 @@ const LoginPage = () => {
         if(resp.ok){
           const data = await resp.json();
           const { user } = data;
+          sessionStorage.setItem('Authorization', user.accessToken);
           auth.setAccessToken(user.accessToken);
           navigate('/upload')
         }
