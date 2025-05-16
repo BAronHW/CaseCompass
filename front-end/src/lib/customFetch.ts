@@ -1,10 +1,8 @@
 import { requestTypeEnum } from "../interfacesEnumsAndTypes/enums";
-
 /**
  * 
- * 1. depending on what kind of request string for the fetch api
- * 2. create 
- * 
+ * TODO:
+ * Need to implement refetch logic where if there is an error you try to refetch 3 times.
  */
 
 export const customFetch = async (url: string, requestType: requestTypeEnum, accessToken?: string, body?: Record<string, unknown>) => {
@@ -32,7 +30,7 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
 
         }
 
-        const method = serializedRequestType().toString();
+        const method = serializedRequestType().toString()
 
         const headerWithToken = {
             "Content-Type": "application/json",
@@ -68,7 +66,27 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
                 }
                 const respJson = await response.json();
                 sessionStorage.setItem("Authorization", respJson.newAccessToken);
+                // TODO need to test this refresh logic
               }catch(error){
+                
+                const retryCount = 3;
+                let currentCount = 0;
+
+                while(currentCount < retryCount){
+                    const response = await fetch('http://localhost:3000/api/auth/refresh', {
+                        method: 'POST',
+                        credentials: 'include'
+                    })
+
+                    if(response.ok){
+                        const serializedResponse = await response.json();
+                        sessionStorage.setItem('Authorization', serializedResponse.newAccessToken);
+                        currentCount = 3;
+                        return serializedResponse;
+                    }
+                    
+                    currentCount++;
+                }
                 console.log(error)
               }
         }

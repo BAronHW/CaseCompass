@@ -63,8 +63,6 @@ const DocumentUploader = () => {
         });
       }, 100);
 
-      // TODO:
-      // replace this with the custom fetch to automatically do the refetching of the access tokens
       const accessToken = sessionStorage.getItem('Authorization');
       await customFetch('http://localhost:3000/api/documents/createDocument', requestTypeEnum.POST, accessToken ?? undefined, payload)
       clearInterval(progressInterval);
