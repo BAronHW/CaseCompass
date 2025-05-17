@@ -5,7 +5,6 @@ export const uploadDocument = async (req: Request, res: Response, next: NextFunc
 
     const { name, size, file, uid } = req.body;
     // @ts-ignore
-    console.log(req.user);
     await jobQueue.add('uploadDocumentToS3', 
         {
             name: name, 
