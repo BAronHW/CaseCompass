@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { jobQueue } from "../lib/bullMQContext";
 
-export const uploadDocument = async (req: Request, res: Response, next: NextFunction) => {
+export const uploadDocument = async (req: Request, res: Response) => {
 
     const { name, size, file, uid } = req.body;
     // @ts-ignore

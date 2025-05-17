@@ -14,7 +14,6 @@ const LoginPage = () => {
     remember: Yup.boolean()
   });
 
-  // Initialize Formik
   const formik = useFormik({
     initialValues: {
       email: '',

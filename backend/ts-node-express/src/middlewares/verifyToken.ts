@@ -3,8 +3,7 @@ import jwt from "jsonwebtoken";
 import 'dotenv/config';
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.body.refreshToken;
-    console.log(authHeader);
+    const authHeader = req.headers.authorization;
     
     if (!authHeader) {
         res.json({ redirectAddr:'http://localhost:5173/login' })

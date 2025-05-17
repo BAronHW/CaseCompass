@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import useAuth from '../Hooks/useAuth';
 import { customFetch, requestTypeEnum } from '../lib/customFetch';
 
 const DocumentUploader = () => {
@@ -9,9 +8,15 @@ const DocumentUploader = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const auth = useAuth();
+
+
+  async function test(){
+    const cookie = await cookieStore.get('refreshToken') 
+    console.log(cookie)
+  }
 
   const handleFileChange = (e) => {
+    test()
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
