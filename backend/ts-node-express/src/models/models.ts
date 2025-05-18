@@ -5,14 +5,12 @@ export interface UserWithPassword {
   password: string;
   uid: string;
 }
-
 export interface UserWithoutPassword {
   id: number;
   name: string | null;
   email: string;
   uid: string;
 }
-
 export interface Document {
   id: number
   key: String
@@ -20,4 +18,9 @@ export interface Document {
   name: String
   user: UserWithPassword
   uid: String
+}
+export interface PDF {
+  id: number
+  pdfBuffer: Buffer
+  metaData: string
 }
