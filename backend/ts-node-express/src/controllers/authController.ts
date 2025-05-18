@@ -131,7 +131,6 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
 export const refresh = async (req: Request, res: Response, next: NextFunction) => {
 
     try {
-        console.log('here at refresh')
         const refreshToken = req.cookies.refreshToken;
         if(!refreshToken){
             res.status(400).json({message: "missing refresh token"});
