@@ -24,3 +24,9 @@ export interface PDF {
   pdfBuffer: Buffer
   metaData: string
 }
+
+export enum TypeOfTask {
+  DocumentUpload,
+  ChunkDocument,
+  ConvertChunkToEmbedding
+}
