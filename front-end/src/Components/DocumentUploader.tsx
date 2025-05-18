@@ -12,7 +12,6 @@ const DocumentUploader = () => {
 
   async function test(){
     const cookie = await cookieStore.get('refreshToken') 
-    console.log(cookie)
   }
 
   const handleFileChange = (e) => {

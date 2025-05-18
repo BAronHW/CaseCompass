@@ -1,9 +1,4 @@
 import { requestTypeEnum } from "../interfacesEnumsAndTypes/enums";
-/**
- * 
- * TODO:
- * Need to implement refetch logic where if there is an error you try to refetch 3 times.
- */
 
 export const customFetch = async (url: string, requestType: requestTypeEnum, accessToken?: string, body?: Record<string, unknown>) => {
 
@@ -47,10 +42,6 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
             credentials: 'include'
         }
 
-
-        const cookie = await cookieStore.getAll()
-        console.log(cookie);
-
         if(method !== 'GET' && body){
             options.body = JSON.stringify(body);
         };
@@ -58,8 +49,7 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
         const response = await fetch(url, options);
         const respJson = await response.json();
 
-        if(response.status > 400 && respJson.message === 'Token has expired'){
-
+        if(response.status >= 400 && respJson.message === 'Token has expired'){
 
             try{
                 const response = await fetch('http://localhost:3000/api/auth/refresh', {
@@ -70,22 +60,27 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
                 const respJson = await response.json();
                 if(response.ok) {
                     sessionStorage.setItem("Authorization", respJson.newAccessToken);
-                    console.log('set sessionstorage')
-                    return
                 }
 
                 const retryCount = 3;
                 let currentCount = 0;
 
                 while(currentCount < retryCount){
-                    console.log('here')
+
+                    const authToken = {
+                        accessToken: respJson.newAccessToken
+                    }
                     const response = await fetch(url, {
                         method: 'POST',
-                        credentials: 'include'
+                        credentials: 'include',
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(authToken)
                     })
 
+
                     if(response.ok){
-                        console.log('refresh is okay')
                         const serializedResponse = await response.json();
                         sessionStorage.setItem('Authorization', serializedResponse.newAccessToken);
                         currentCount = 3;
@@ -93,10 +88,11 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
                     }
                     
                     currentCount++;
+
                 }
 
               }catch(error){
-
+                // throw new Error('unable to refresh')
                 console.log(error)
                 
               }
@@ -114,4 +110,4 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
 
 }
 
-export { requestTypeEnum };
+export { requestTypeEnum }
