@@ -17,6 +17,7 @@ model Document {
   uid         String
   accountTemplate accountTemplate[]
   documentComments documentComments[]
+  documentChunks documentChunks[]
 }
 
 model documentComments {
@@ -31,7 +32,7 @@ model accountTemplate {
   id Int @id @default(autoincrement())
   ownerId Int @unique
   owner User @relation(fields: [ownerId], references: [id])
-  documentArray Document[]
+  documents Document[]
 }
 
 model User {
@@ -45,8 +46,10 @@ model User {
   accountTemplate accountTemplate[]
 }
 
-// model documentChunks {
-//   id Int @id @default(autoincrement())
-//   embeddings Unsupported("vector") 
-// }
+model documentChunks {
+  id Int @id @default(autoincrement())
+  embeddings Unsupported("vector")?
+  document Document @relation(fields: [documentId], references: [id])
+  documentId Int @unique
+}
 

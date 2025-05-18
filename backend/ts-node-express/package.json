@@ -30,6 +30,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.787.0",
+    "@langchain/community": "^0.3.43",
+    "@langchain/core": "^0.3.56",
+    "@langchain/openai": "^0.5.10",
     "@prisma/client": "^6.6.0",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.48.1",
