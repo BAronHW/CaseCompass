@@ -4,8 +4,9 @@ import 'dotenv/config';
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
+    console.log(authHeader)
     
-    if (!authHeader) {
+    if (!authHeader || authHeader == undefined) {
         res.json({ redirectAddr:'http://localhost:5173/login' })
         return 
     }

@@ -7,6 +7,7 @@ import { Job } from "bullmq";
 import { analyzePDF } from "./analyzePDF";
 import { uploadToS3 } from "./uploadToS3";
 import { categorizePDF } from "./categorizePDF";
+import { deletePdf } from './deletePDF';
 
 export const jobSwitchStatement = async (job: Job) => {
     switch(job.name){
@@ -16,6 +17,8 @@ export const jobSwitchStatement = async (job: Job) => {
             return await uploadToS3(job.data); 
         case 'categorizePDF':
             return await categorizePDF(job.data);
+        case 'deleteDocument':
+            return await deletePdf(job.data);
         default:
             throw new Error(`Unknown job type: ${job.name}`);
     }

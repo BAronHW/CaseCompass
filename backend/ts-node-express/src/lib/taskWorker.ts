@@ -65,6 +65,24 @@ ChunkToEmbeddingsWorker.on('failed', (job, err) => {
     console.log(`Job ${job?.name}`)
 });
 
+const DeleteDocumentTaskWorker = new Worker('chunkToEmbeddingsTask', async (job: Job) => {
+    const backgroundTaskResult = await jobSwitchStatement(job);
+
+    return backgroundTaskResult;
+}, {
+    connection: redisConnection,
+    concurrency: 5,
+})
+
+ChunkToEmbeddingsWorker.on('completed', job => {
+    console.log(`Job ${job.id} completed with result:`, job.returnvalue);
+});
+
+ChunkToEmbeddingsWorker.on('failed', (job, err) => {
+    console.log(`Job ${job?.id} failed with error:`, err.message);
+    console.log(`Job ${job?.name}`)
+});
+
 
 
 export const startTaskWorker = (typeOfTask: TypeOfTask) => {
@@ -82,6 +100,9 @@ export const startTaskWorker = (typeOfTask: TypeOfTask) => {
         case TypeOfTask.ConvertChunkToEmbedding:
             return ChunkDocumentTaskWorker;
             break;
+
+        case TypeOfTask.DeleteDocument:
+            return DeleteDocumentTaskWorker;
         
         default:
             throw new Error('startTaskWorker Error didnt match any type of task supported')

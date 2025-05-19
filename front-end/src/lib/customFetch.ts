@@ -1,4 +1,7 @@
 import { requestTypeEnum } from "../interfacesEnumsAndTypes/enums";
+/**
+ * Maybe break down this function into smaller parts
+ */
 
 export const customFetch = async (url: string, requestType: requestTypeEnum, accessToken?: string, body?: Record<string, unknown>) => {
 

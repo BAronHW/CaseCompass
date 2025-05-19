@@ -28,5 +28,6 @@ export interface PDF {
 export enum TypeOfTask {
   DocumentUpload,
   ChunkDocument,
-  ConvertChunkToEmbedding
+  ConvertChunkToEmbedding,
+  DeleteDocument
 }
