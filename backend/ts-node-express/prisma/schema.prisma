@@ -49,6 +49,7 @@ model User {
 model documentChunks {
   id Int @id @default(autoincrement())
   embeddings Unsupported("vector")?
+  content String
   document Document @relation(fields: [documentId], references: [id])
   documentId Int @unique
 }
