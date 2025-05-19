@@ -8,13 +8,14 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { join } from "path";
 import { tmpdir } from "os";
 import { Document } from "@langchain/core/documents";
+import { unlinkSync, writeFileSync } from "fs";
 
 export async function ChunkPDF(pdfBuffer: Buffer){
     try {
 
-        /
-
         const tempFilePath = join(tmpdir(), `temp_pdf_${Date.now()}.pdf`);
+
+        writeFileSync(tempFilePath, pdfBuffer);
 
         const loader = new PDFLoader(tempFilePath, {
             splitPages: true,
@@ -38,9 +39,13 @@ export async function ChunkPDF(pdfBuffer: Buffer){
             })
         );
 
-        return chunkedDocuments.flat();
+        unlinkSync(tempFilePath);
 
-    }catch(error) {
+        return chunkedDocuments.flat();
+        
+
+    }
+    catch(error) {
         console.log('Error processing PDF Buffer: ', error);
         throw error
     }
