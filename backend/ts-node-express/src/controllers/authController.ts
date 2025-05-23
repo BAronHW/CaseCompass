@@ -16,7 +16,7 @@ export const protectedRoute = (req: Request, res: Response) => {
     return
 }
 
-export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
+export const registerUser = async (req: Request, res: Response) => {
     try{
 
         const {name, email, password} = req.body;
@@ -72,7 +72,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
 }
 
-export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
+export const loginUser = async (req: Request, res: Response) => {
     try{
         const user = await db.user.findUnique({
             where:{
@@ -128,7 +128,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     }
 }
 
-export const refresh = async (req: Request, res: Response, next: NextFunction) => {
+export const refresh = async (req: Request, res: Response) => {
 
     try {
         const refreshToken = req.cookies.refreshToken;
