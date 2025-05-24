@@ -18,6 +18,7 @@ const uploadDocumentTaskWorker = new Worker('documentTasks', async (job : Job) =
 
 uploadDocumentTaskWorker.on('completed', job => {
     console.log(`Job ${job.id} completed with result:`, job.returnvalue);
+    
 });
 
 uploadDocumentTaskWorker.on('failed', (job, err) => {

@@ -11,10 +11,11 @@ import { tmpdir } from "os";
 import { Document } from "@langchain/core/documents";
 import { unlinkSync, writeFileSync } from "fs";
 
-export async function ChunkPDF(pdfBuffer: Buffer){
+export async function ChunkPDF(pdfBuffer: Buffer): Promise<Document[]> {
+    let tempFilePath: string | null = null;
+    
     try {
-
-        const tempFilePath = join(tmpdir(), `temp_pdf_${Date.now()}.pdf`);
+        tempFilePath = join(tmpdir(), `temp_pdf_${Date.now()}.pdf`);
 
         writeFileSync(tempFilePath, pdfBuffer);
 
@@ -25,28 +26,33 @@ export async function ChunkPDF(pdfBuffer: Buffer){
         const docs = await loader.load();
 
         const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize: 50,
-            chunkOverlap: 1,
+            chunkSize: 500, // Increased from 50 for more meaningful chunks
+            chunkOverlap: 50, // Increased from 1 for better context preservation
         });
 
         const chunkedDocuments = await Promise.all(
-            docs.map((doc) => {
-                splitter.splitDocuments([
+            docs.map(async (doc) => {
+                return await splitter.splitDocuments([
                     new Document({
                         pageContent: doc.pageContent,
-                        metadata: {...doc.metadata}
+                        metadata: { ...doc.metadata }
                     })
-                ])
+                ]);
             })
         );
 
-        unlinkSync(tempFilePath);
-
         return chunkedDocuments.flat();
 
-    }
-    catch(error) {
+    } catch (error) {
         console.log('Error processing PDF Buffer: ', error);
-        throw error
+        throw error;
+    } finally {
+        if (tempFilePath) {
+            try {
+                unlinkSync(tempFilePath);
+            } catch (unlinkError) {
+                console.warn('Warning: Could not delete temp file:', unlinkError);
+            }
+        }
     }
 }

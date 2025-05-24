@@ -3,6 +3,8 @@ import { JobData } from "bullmq";
 import * as crypto from 'crypto';
 import { s3 } from "../lib/s3Context";
 import { db } from "../lib/prismaContext";
+import { ChunkPDF } from "./chunkPDF";
+import { OpenAIFunctions } from "../lib/OpenAIContext";
 
 export interface UploadToS3JobData {
     file: string;
@@ -36,7 +38,8 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         };
         
         const command = new PutObjectCommand(params);
-        await s3.send(command);
+        const sentDocument = await s3.send(command);
+        console.log("tstesdftesg", sentDocument)
 
         
         await db.document.create({
@@ -47,6 +50,22 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
                 uid: jobData.uid,
             }
         });
+
+        if(sentDocument.$metadata.httpStatusCode !== 200){
+            throw new Error('unable to send to s3');
+        }
+
+        const arrayOfChunkedDocs = await ChunkPDF(buffer);
+
+        const openai = new OpenAIFunctions();
+
+        const chunkEmbeddings = Promise.all(
+            await arrayOfChunkedDocs.map((chunk)=>{
+                openai.getEmbeddings(chunk.pageContent)
+            })
+        );
+
+        console.log(chunkEmbeddings);
 
         return {
             key: uniqueName,
