@@ -88,7 +88,7 @@ const DocumentUploader = () => {
   });
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md m-10">
       <button onClick={logOut} className='hover:bg-sky-700'>Log Out</button>
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Upload Document</h2>
       

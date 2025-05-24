@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   Home, 
-  Users, 
   Settings, 
   FileText, 
   BarChart3,
@@ -14,8 +13,7 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
   const [activeItem, setActiveItem] = useState('dashboard');
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'users', label: 'Users', icon: Users },
+    { id: 'Upload', label: 'Upload', icon: Home },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'documents', label: 'Documents', icon: FileText },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -26,6 +24,7 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
+    <>
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
       <div className={`bg-white shadow-lg transition-all duration-300 ease-in-out ${
@@ -100,6 +99,7 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
         {children}
       </div>
     </div>
+    </>
   );
 };
 
