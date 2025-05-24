@@ -43,7 +43,6 @@ export async function ChunkPDF(pdfBuffer: Buffer){
         unlinkSync(tempFilePath);
 
         return chunkedDocuments.flat();
-        
 
     }
     catch(error) {
