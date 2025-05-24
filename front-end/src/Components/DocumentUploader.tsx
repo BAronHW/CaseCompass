@@ -51,8 +51,7 @@ const DocumentUploader = () => {
       const payload = {
         name: file.name,
         size: file.size,
-        file: base64File.split(',')[1],
-        uid: '89de90f6-1d07-485c-8abd-84132c14df3b'
+        file: base64File.split(',')[1]
       };
 
       // Simulate upload progress
