@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.787.0",
+    "@google/genai": "^1.0.1",
     "@langchain/community": "^0.3.43",
     "@langchain/core": "^0.3.56",
     "@langchain/openai": "^0.5.10",

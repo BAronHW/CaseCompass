@@ -1,10 +1,10 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { JobData } from "bullmq";
 import * as crypto from 'crypto';
 import { s3 } from "../lib/s3Context";
 import { db } from "../lib/prismaContext";
 import { ChunkPDF } from "./chunkPDF";
-import { OpenAIFunctions } from "../lib/OpenAIContext";
+import { GeminiAiContext } from "../lib/GeminiAiContext";
+import { GoogleGenAI } from "@google/genai";
 
 export interface UploadToS3JobData {
     file: string;
@@ -42,7 +42,7 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         console.log("tstesdftesg", sentDocument)
 
         
-        await db.document.create({
+        const uploadedDocument = await db.document.create({
             data: {
                 key: uniqueName,
                 title: jobData.name,
@@ -57,15 +57,25 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
 
         const arrayOfChunkedDocs = await ChunkPDF(buffer);
 
-        const openai = new OpenAIFunctions();
+        const gemini = new GoogleGenAI({
+            apiKey: process.env.GEMINI_KEY,
+        })
 
-        const chunkEmbeddings = Promise.all(
-            await arrayOfChunkedDocs.map((chunk)=>{
-                openai.getEmbeddings(chunk.pageContent)
+        const arrayOfEmbeddings = Promise.all(
+            await arrayOfChunkedDocs.map( async (chunk)=>{
+                return await gemini.models.embedContent({
+                    model: 'gemini-embedding-exp-03-07',
+                    contents: chunk.pageContent,
+                    config: {
+                        taskType: "SEMANTIC_SIMILARITY",
+                    }
+                })
             })
         );
 
-        console.log(chunkEmbeddings);
+        console.log(arrayOfEmbeddings);
+
+        // may have to write the SQL by hand since I dont think prisma can handle the raw vector.
 
         return {
             key: uniqueName,
