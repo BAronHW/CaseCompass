@@ -2,9 +2,10 @@ import { Job, Worker } from 'bullmq';
 import dotenv from 'dotenv';
 import { jobSwitchStatement } from '../functions/taskSwtichStatement';
 import { redisConnection } from './redisConnectionContext';
+import { TypeOfTask } from '../models/models';
 dotenv.config();
 
-const taskWorker = new Worker('documentTasks', async (job : Job) => {
+const uploadDocumentTaskWorker = new Worker('documentTasks', async (job : Job) => {
 
     const backgroundTaskResult = await jobSwitchStatement(job);
 
@@ -15,17 +16,99 @@ const taskWorker = new Worker('documentTasks', async (job : Job) => {
     concurrency: 5,
 });
 
-taskWorker.on('completed', job => {
+uploadDocumentTaskWorker.on('completed', job => {
     console.log(`Job ${job.id} completed with result:`, job.returnvalue);
+    
 });
 
-taskWorker.on('failed', (job, err) => {
+uploadDocumentTaskWorker.on('failed', (job, err) => {
     console.log(`Job ${job?.id} failed with error:`, err.message);
     console.log(`Job ${job?.name}`)
 });
 
-export const startTaskWorker = () => {
-    return taskWorker;
+// <-------------------------------Chunk Docs----------------------------------->
+
+const ChunkDocumentTaskWorker = new Worker('chunkDocumentTask', async (job: Job) => {
+    const backgroundTaskResult = await jobSwitchStatement(job);
+
+    return backgroundTaskResult;
+}, {
+    connection: redisConnection,
+    concurrency: 5,
+})
+
+ChunkDocumentTaskWorker.on('completed', job => {
+    console.log(`Job ${job.id} completed with result:`, job.returnvalue);
+});
+
+ChunkDocumentTaskWorker.on('failed', (job, err) => {
+    console.log(`Job ${job?.id} failed with error:`, err.message);
+    console.log(`Job ${job?.name}`)
+});
+
+// <--------------------------------Chunk to Embeddings------------------------------>
+
+const ChunkToEmbeddingsWorker = new Worker('chunkToEmbeddingsTask', async (job: Job) => {
+    const backgroundTaskResult = await jobSwitchStatement(job);
+
+    return backgroundTaskResult;
+}, {
+    connection: redisConnection,
+    concurrency: 5,
+})
+
+ChunkToEmbeddingsWorker.on('completed', job => {
+    console.log(`Job ${job.id} completed with result:`, job.returnvalue);
+});
+
+ChunkToEmbeddingsWorker.on('failed', (job, err) => {
+    console.log(`Job ${job?.id} failed with error:`, err.message);
+    console.log(`Job ${job?.name}`)
+});
+
+const DeleteDocumentTaskWorker = new Worker('chunkToEmbeddingsTask', async (job: Job) => {
+    const backgroundTaskResult = await jobSwitchStatement(job);
+
+    return backgroundTaskResult;
+}, {
+    connection: redisConnection,
+    concurrency: 5,
+})
+
+ChunkToEmbeddingsWorker.on('completed', job => {
+    console.log(`Job ${job.id} completed with result:`, job.returnvalue);
+});
+
+ChunkToEmbeddingsWorker.on('failed', (job, err) => {
+    console.log(`Job ${job?.id} failed with error:`, err.message);
+    console.log(`Job ${job?.name}`)
+});
+
+
+
+export const startTaskWorker = (typeOfTask: TypeOfTask) => {
+
+    switch(typeOfTask){
+
+        case TypeOfTask.DocumentUpload:
+            return uploadDocumentTaskWorker;
+            break;
+        
+        case TypeOfTask.ChunkDocument:
+            return ChunkDocumentTaskWorker;
+            break;
+
+        case TypeOfTask.ConvertChunkToEmbedding:
+            return ChunkDocumentTaskWorker;
+            break;
+
+        case TypeOfTask.DeleteDocument:
+            return DeleteDocumentTaskWorker;
+        
+        default:
+            throw new Error('startTaskWorker Error didnt match any type of task supported')
+
+    }
 }
 
 

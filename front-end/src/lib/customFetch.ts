@@ -1,6 +1,9 @@
 import { requestTypeEnum } from "../interfacesEnumsAndTypes/enums";
+/**
+ * Maybe break down this function into smaller parts
+ */
 
-export const customFetch = async (url: string, requestType: requestTypeEnum, accessToken?: string, body?: JSON) => {
+export const customFetch = async (url: string, requestType: requestTypeEnum, accessToken?: string, body?: Record<string, unknown>) => {
 
     try{
 
@@ -25,7 +28,7 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
 
         }
 
-        const method = serializedRequestType().toString();
+        const method = serializedRequestType().toString()
 
         const headerWithToken = {
             "Content-Type": "application/json",
@@ -38,26 +41,71 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
 
         const options : RequestInit = {
             method: method,
-            headers: accessToken !== null ? headerWithToken : headerNoToken
+            headers: accessToken !== undefined ? headerWithToken : headerNoToken,
+            credentials: 'include'
         }
 
-        // GET requests cannot have bodies
         if(method !== 'GET' && body){
             options.body = JSON.stringify(body);
         };
 
         const response = await fetch(url, options);
+        const respJson = await response.json();
 
-        if (method !== 'GET' && body) {
-            options.body = JSON.stringify(body);
+        if(response.status >= 400 && respJson.message === 'Token has expired'){
+
+            try{
+                const response = await fetch('http://localhost:3000/api/auth/refresh', {
+                  method: "POST",
+                  credentials: "include",
+                })
+                
+                const respJson = await response.json();
+                if(response.ok) {
+                    sessionStorage.setItem("Authorization", respJson.newAccessToken);
+                }
+
+                const retryCount = 3;
+                let currentCount = 0;
+
+                while(currentCount < retryCount){
+
+                    const authToken = {
+                        accessToken: respJson.newAccessToken
+                    }
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(authToken)
+                    })
+
+
+                    if(response.ok){
+                        const serializedResponse = await response.json();
+                        sessionStorage.setItem('Authorization', serializedResponse.newAccessToken);
+                        currentCount = 3;
+                        return serializedResponse;
+                    }
+                    
+                    currentCount++;
+
+                }
+
+              }catch(error){
+                // throw new Error('unable to refresh')
+                console.log(error)
+                
+              }
         }
 
         if(!response.ok){
             throw new Error(`Response status: ${response.status}`);
         }
 
-        const returnJson = await response.json();
-        return returnJson;
+        return respJson;
 
     }catch(error){
         throw new Error(`Error message ${error}`);
@@ -65,4 +113,4 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
 
 }
 
-export { requestTypeEnum };
+export { requestTypeEnum }

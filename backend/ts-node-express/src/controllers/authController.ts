@@ -16,7 +16,7 @@ export const protectedRoute = (req: Request, res: Response) => {
     return
 }
 
-export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
+export const registerUser = async (req: Request, res: Response) => {
     try{
 
         const {name, email, password} = req.body;
@@ -72,7 +72,7 @@ export const registerUser = async (req: Request, res: Response, next: NextFuncti
 
 }
 
-export const loginUser = async (req: Request, res: Response, next: NextFunction) => {
+export const loginUser = async (req: Request, res: Response) => {
     try{
         const user = await db.user.findUnique({
             where:{
@@ -128,7 +128,7 @@ export const loginUser = async (req: Request, res: Response, next: NextFunction)
     }
 }
 
-export const refresh = async (req: Request, res: Response, next: NextFunction) => {
+export const refresh = async (req: Request, res: Response) => {
 
     try {
         const refreshToken = req.cookies.refreshToken;
@@ -144,11 +144,12 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
         }
         
         // @ts-ignore
-        const user = isValidRefreshToken.user;
-        const newAccessToken = jwt.sign(user, jwtSecret);
+        const user = isValidRefreshToken.userForToken;
+        const newAccessToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1h' });
         res.status(200).json({newAccessToken});
         return
     } catch (error) {
+        console.log(error)
         res.status(400).json({error})
         return
     }

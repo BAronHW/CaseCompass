@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import useAuth from '../Hooks/useAuth';
+import { customFetch, requestTypeEnum } from '../lib/customFetch';
 
 const DocumentUploader = () => {
   const navigate = useNavigate();
@@ -8,9 +8,14 @@ const DocumentUploader = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const auth = useAuth();
+
+
+  async function test(){
+    const cookie = await cookieStore.get('refreshToken') 
+  }
 
   const handleFileChange = (e) => {
+    test()
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
@@ -21,6 +26,9 @@ const DocumentUploader = () => {
       method: 'POST',
       credentials: 'include'
     })
+    if(res.ok){
+      sessionStorage.removeItem('Authorization');
+    }
     if(res.ok){
       navigate('/')
     }
@@ -37,15 +45,13 @@ const DocumentUploader = () => {
     setUploadStatus(null);
 
     try {
-      // Convert file to base64
       const base64File = await toBase64(file);
       
       // Create payload
       const payload = {
         name: file.name,
         size: file.size,
-        file: base64File.split(',')[1], // Remove the data:application/pdf;base64, part
-        uid: '89de90f6-1d07-485c-8abd-84132c14df3b' // In a real app, you'd get this from auth context
+        file: base64File.split(',')[1]
       };
 
       // Simulate upload progress
@@ -60,32 +66,12 @@ const DocumentUploader = () => {
         });
       }, 100);
 
-      // Call API endpoint
-      const response = await fetch('http://localhost:3000/api/documents/createDocument', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': auth.accessToken
-        },
-        // credentials: 'include', investingate this
-        body: JSON.stringify(payload)
-      });
-
+      const accessToken = sessionStorage.getItem('Authorization');
+      await customFetch('http://localhost:3000/api/documents/createDocument', requestTypeEnum.POST, accessToken ?? undefined, payload)
       clearInterval(progressInterval);
-      
-      if (response.ok) {
-        setUploadProgress(100);
-        setUploadStatus({ success: true, message: 'Document uploaded successfully' });
-      } else {
-        const errorData = await response.json();
-        if(errorData.message == 'Token has expired'){
-          navigate(errorData.redirect_addr)
-        }
-        setUploadStatus({ success: false, message: errorData.message || 'Upload failed' });
-      }
+      setUploadStatus({success: true, message: 'Sucessfully uploaded document'})
     } catch (error) {
-      console.error('Upload error:', error);
+      console.log(error)
       setUploadStatus({ success: false, message: 'Error uploading document' });
     } finally {
       setUploading(false);
@@ -101,7 +87,7 @@ const DocumentUploader = () => {
   });
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md m-10">
       <button onClick={logOut} className='hover:bg-sky-700'>Log Out</button>
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Upload Document</h2>
       

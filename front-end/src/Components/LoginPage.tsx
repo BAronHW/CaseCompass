@@ -14,7 +14,6 @@ const LoginPage = () => {
     remember: Yup.boolean()
   });
 
-  // Initialize Formik
   const formik = useFormik({
     initialValues: {
       email: '',
@@ -23,7 +22,7 @@ const LoginPage = () => {
     onSubmit: async (values) => {
         const resp = await fetch('http://localhost:3000/api/auth/login', {
             method: 'POST',
-            credentials: 'include', // oh my god this is why the refresh token was not working
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -33,6 +32,7 @@ const LoginPage = () => {
         if(resp.ok){
           const data = await resp.json();
           const { user } = data;
+          sessionStorage.setItem('Authorization', user.accessToken);
           auth.setAccessToken(user.accessToken);
           navigate('/upload')
         }
@@ -59,7 +59,6 @@ const LoginPage = () => {
               <div className="mt-1">
                 <input
                   id="email"
-                  name="email"
                   type="text"
                   autoComplete="email"
                   {...formik.getFieldProps('email')}
@@ -78,7 +77,6 @@ const LoginPage = () => {
               <div className="mt-1">
                 <input
                   id="password"
-                  name="password"
                   type="password"
                   autoComplete="current-password"
                   {...formik.getFieldProps('password')}
@@ -94,7 +92,6 @@ const LoginPage = () => {
               <div className="flex items-center">
                 <input
                   id="remember"
-                  name="remember"
                   type="checkbox"
                   {...formik.getFieldProps('remember')}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"

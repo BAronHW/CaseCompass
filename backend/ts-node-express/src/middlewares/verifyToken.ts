@@ -4,9 +4,10 @@ import 'dotenv/config';
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
+    console.log(authHeader)
     
-    if (!authHeader) {
-        res.redirect('http://localhost:5173/login')
+    if (!authHeader || authHeader == undefined) {
+        res.json({ redirectAddr:'http://localhost:5173/login' })
         return 
     }
     
@@ -29,15 +30,18 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         req.user = decodedToken;
         next();
     } catch (error) {
-        if (error instanceof jwt.TokenExpiredError && error instanceof jwt.JsonWebTokenError) {
+        if (error instanceof jwt.TokenExpiredError) {
             res.status(401).json({ 
-                message: 'Token has expired',
-                redirect_addr: '/login'
+                message: 'Token has expired'
             });
             return 
         }
         if (error instanceof jwt.JsonWebTokenError) {
-            res.status(401).json({ message: 'Invalid token' });
+            res.status(401).json({ 
+                message: 'Invalid token',
+                redirect_addr: '/login'
+
+             });
             return
         }
         else {
