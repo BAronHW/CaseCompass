@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import { db } from "../lib/prismaContext";
+import { db } from "../lib/prismaContext.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypt from 'crypto';
-import 'dotenv/config';
+import 'dotenv/config.js';
 
 /**
  * TODO:

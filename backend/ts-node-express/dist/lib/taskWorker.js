@@ -6,15 +6,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.startTaskWorker = void 0;
 const bullmq_1 = require("bullmq");
 const dotenv_1 = __importDefault(require("dotenv"));
-const taskSwtichStatement_js_1 = require("../functions/taskSwtichStatement.js");
-const redisConnectionContext_js_1 = require("./redisConnectionContext.js");
-const models_js_1 = require("../models/models.js");
+const taskSwtichStatement_1 = require("../functions/taskSwtichStatement");
+const redisConnectionContext_1 = require("./redisConnectionContext");
+const models_1 = require("../models/models");
 dotenv_1.default.config();
 const uploadDocumentTaskWorker = new bullmq_1.Worker('documentTasks', async (job) => {
-    const backgroundTaskResult = await (0, taskSwtichStatement_js_1.jobSwitchStatement)(job);
+    const backgroundTaskResult = await (0, taskSwtichStatement_1.jobSwitchStatement)(job);
     return backgroundTaskResult;
 }, {
-    connection: redisConnectionContext_js_1.redisConnection,
+    connection: redisConnectionContext_1.redisConnection,
     concurrency: 5,
 });
 uploadDocumentTaskWorker.on('completed', job => {
@@ -26,10 +26,10 @@ uploadDocumentTaskWorker.on('failed', (job, err) => {
 });
 // <-------------------------------Chunk Docs----------------------------------->
 const ChunkDocumentTaskWorker = new bullmq_1.Worker('chunkDocumentTask', async (job) => {
-    const backgroundTaskResult = await (0, taskSwtichStatement_js_1.jobSwitchStatement)(job);
+    const backgroundTaskResult = await (0, taskSwtichStatement_1.jobSwitchStatement)(job);
     return backgroundTaskResult;
 }, {
-    connection: redisConnectionContext_js_1.redisConnection,
+    connection: redisConnectionContext_1.redisConnection,
     concurrency: 5,
 });
 ChunkDocumentTaskWorker.on('completed', job => {
@@ -41,10 +41,10 @@ ChunkDocumentTaskWorker.on('failed', (job, err) => {
 });
 // <--------------------------------Chunk to Embeddings------------------------------>
 const ChunkToEmbeddingsWorker = new bullmq_1.Worker('chunkToEmbeddingsTask', async (job) => {
-    const backgroundTaskResult = await (0, taskSwtichStatement_js_1.jobSwitchStatement)(job);
+    const backgroundTaskResult = await (0, taskSwtichStatement_1.jobSwitchStatement)(job);
     return backgroundTaskResult;
 }, {
-    connection: redisConnectionContext_js_1.redisConnection,
+    connection: redisConnectionContext_1.redisConnection,
     concurrency: 5,
 });
 ChunkToEmbeddingsWorker.on('completed', job => {
@@ -55,10 +55,10 @@ ChunkToEmbeddingsWorker.on('failed', (job, err) => {
     console.log(`Job ${job?.name}`);
 });
 const DeleteDocumentTaskWorker = new bullmq_1.Worker('chunkToEmbeddingsTask', async (job) => {
-    const backgroundTaskResult = await (0, taskSwtichStatement_js_1.jobSwitchStatement)(job);
+    const backgroundTaskResult = await (0, taskSwtichStatement_1.jobSwitchStatement)(job);
     return backgroundTaskResult;
 }, {
-    connection: redisConnectionContext_js_1.redisConnection,
+    connection: redisConnectionContext_1.redisConnection,
     concurrency: 5,
 });
 ChunkToEmbeddingsWorker.on('completed', job => {
@@ -70,16 +70,16 @@ ChunkToEmbeddingsWorker.on('failed', (job, err) => {
 });
 const startTaskWorker = (typeOfTask) => {
     switch (typeOfTask) {
-        case models_js_1.TypeOfTask.DocumentUpload:
+        case models_1.TypeOfTask.DocumentUpload:
             return uploadDocumentTaskWorker;
             break;
-        case models_js_1.TypeOfTask.ChunkDocument:
+        case models_1.TypeOfTask.ChunkDocument:
             return ChunkDocumentTaskWorker;
             break;
-        case models_js_1.TypeOfTask.ConvertChunkToEmbedding:
+        case models_1.TypeOfTask.ConvertChunkToEmbedding:
             return ChunkDocumentTaskWorker;
             break;
-        case models_js_1.TypeOfTask.DeleteDocument:
+        case models_1.TypeOfTask.DeleteDocument:
             return DeleteDocumentTaskWorker;
         default:
             throw new Error('startTaskWorker Error didnt match any type of task supported');

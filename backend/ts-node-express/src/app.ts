@@ -1,17 +1,17 @@
 import express from 'express';
-import { errorHandler } from './middlewares/errorHandler';
-import authRoutes from './routes/authRoutes';
-import userRoutes from './routes/userRoutes';
-import documentRoutes from './routes/documentRoutes';
-import 'dotenv/config';
-var cors = require('cors');
-var cookieParser = require('cookie-parser');
-var session = require('express-session');
+import { errorHandler } from './middlewares/errorHandler.js';
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
+import 'dotenv/config.js';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
 
 const app = express();
 app.set('trust proxy', 1)
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET!,
   resave: false,
   saveUninitialized: false,
   cookie: { 

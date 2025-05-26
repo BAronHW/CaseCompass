@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import { jobQueue } from "../lib/bullMQContext";
-import { decodeJWT } from "../functions/decodeJWT";
-import { db } from "../lib/prismaContext";
+import { jobQueue } from "../lib/bullMQContext.js";
+import { decodeJWT } from "../functions/decodeJWT.js";
+import { db } from "../lib/prismaContext.js";
 
 export const uploadDocument = async (req: Request, res: Response): Promise<void> => {
     try {

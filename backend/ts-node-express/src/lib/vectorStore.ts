@@ -1,7 +1,7 @@
-import { PrismaVectorStore } from "@langchain/community/vectorstores/prisma";
+import { PrismaVectorStore } from "@langchain/community/vectorstores/prisma.js";
 import { PrismaClient, Prisma, documentChunks } from "@prisma/client";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { db } from "./prismaContext";
+import { db } from "./prismaContext.js";
 
 
 export const VectorStore = PrismaVectorStore.withModel<documentChunks>(db).create(

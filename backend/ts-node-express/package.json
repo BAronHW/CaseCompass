@@ -1,10 +1,11 @@
 {
+  "type": "module",
   "name": "ts-node-express",
   "version": "1.0.0",
-  "main": "index.js",
+  "exports": "./index.js",
   "scripts": {
     "test": "jest",
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/server.ts",
+    "dev": "nodemon --watch 'src/**/*.ts' --exec 'tsx' src/server.ts",
     "lint": "eslint 'src/**/*.ts'"
   },
   "keywords": [],
@@ -12,7 +13,10 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.8",
+    "@types/cors": "^2.8.18",
     "@types/express": "^5.0.1",
+    "@types/express-session": "^1.18.1",
     "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.14.1",
@@ -26,12 +30,13 @@
     "prettier": "^3.5.3",
     "ts-jest": "^29.3.1",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.787.0",
     "@google/genai": "^1.0.1",
-    "@langchain/community": "^0.3.43",
+    "@langchain/community": "^0.3.44",
     "@langchain/core": "^0.3.56",
     "@langchain/openai": "^0.5.10",
     "@langchain/textsplitters": "^0.1.0",

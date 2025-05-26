@@ -36,8 +36,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadToS3 = void 0;
 const client_s3_1 = require("@aws-sdk/client-s3");
 const crypto = __importStar(require("crypto"));
-const s3Context_js_1 = require("../lib/s3Context.js");
-const prismaContext_js_1 = require("../lib/prismaContext.js");
+const s3Context_1 = require("../lib/s3Context");
+const prismaContext_1 = require("../lib/prismaContext");
+const chunkPDF_1 = require("./chunkPDF");
+const genai_1 = require("@google/genai");
 const uploadToS3 = async (jobData) => {
     try {
         if (!jobData.file || !jobData.uid) {
@@ -52,8 +54,9 @@ const uploadToS3 = async (jobData) => {
             ContentType: "application/pdf",
         };
         const command = new client_s3_1.PutObjectCommand(params);
-        await s3Context_js_1.s3.send(command);
-        await prismaContext_js_1.db.document.create({
+        const sentDocument = await s3Context_1.s3.send(command);
+        console.log("tstesdftesg", sentDocument);
+        const uploadedDocument = await prismaContext_1.db.document.create({
             data: {
                 key: uniqueName,
                 title: jobData.name,
@@ -61,6 +64,24 @@ const uploadToS3 = async (jobData) => {
                 uid: jobData.uid,
             }
         });
+        if (sentDocument.$metadata.httpStatusCode !== 200) {
+            throw new Error('unable to send to s3');
+        }
+        const arrayOfChunkedDocs = await (0, chunkPDF_1.ChunkPDF)(buffer);
+        const gemini = new genai_1.GoogleGenAI({
+            apiKey: process.env.GEMINI_KEY,
+        });
+        const arrayOfEmbeddings = Promise.all(await arrayOfChunkedDocs.map(async (chunk) => {
+            return await gemini.models.embedContent({
+                model: 'gemini-embedding-exp-03-07',
+                contents: chunk.pageContent,
+                config: {
+                    taskType: "SEMANTIC_SIMILARITY",
+                }
+            });
+        }));
+        console.log(arrayOfEmbeddings);
+        // may have to write the SQL by hand since I dont think prisma can handle the raw vector.
         return {
             key: uniqueName,
             name: jobData.name,

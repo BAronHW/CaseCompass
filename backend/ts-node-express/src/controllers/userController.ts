@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { db } from "../lib/prismaContext";
-import { UserWithoutPassword, UserWithPassword } from "../models/models";
+import { db } from "../lib/prismaContext.js";
+import { UserWithoutPassword, UserWithPassword } from "../models/models.js";
 
 export const findUserByUid = async (req: Request, res: Response, next: NextFunction) => {
     try {

@@ -4,10 +4,10 @@
  */
 
 import { Job } from "bullmq";
-import { analyzePDF } from "./analyzePDF";
-import { uploadToS3 } from "./uploadToS3";
-import { categorizePDF } from "./categorizePDF";
-import { deletePdf } from './deletePDF';
+import { analyzePDF } from "./analyzePDF.js";
+import { uploadToS3 } from "./uploadToS3.js";
+import { categorizePDF } from "./categorizePDF.js";
+import { deletePdf } from './deletePDF.js';
 
 export const jobSwitchStatement = async (job: Job) => {
     switch(job.name){
