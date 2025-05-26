@@ -4,11 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logout = exports.refresh = exports.loginUser = exports.registerUser = exports.protectedRoute = void 0;
-const prismaContext_js_1 = require("../lib/prismaContext.js");
+const prismaContext_1 = require("../lib/prismaContext");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const crypto_1 = __importDefault(require("crypto"));
-require("dotenv/config.js");
+require("dotenv/config");
 /**
  * TODO:
  * 1. refactor to use transactions to ensure atomic mutations\
@@ -19,10 +19,10 @@ const protectedRoute = (req, res) => {
     return;
 };
 exports.protectedRoute = protectedRoute;
-const registerUser = async (req, res, next) => {
+const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        const userHasExists = await prismaContext_js_1.db.user.findFirst({
+        const userHasExists = await prismaContext_1.db.user.findFirst({
             where: {
                 email: email
             }
@@ -33,7 +33,7 @@ const registerUser = async (req, res, next) => {
         }
         const hashedPassword = await bcryptjs_1.default.hash(password, 10);
         const uuid = crypto_1.default.randomUUID();
-        const newUser = await prismaContext_js_1.db.user.create({
+        const newUser = await prismaContext_1.db.user.create({
             data: {
                 name: name,
                 email: email,
@@ -42,7 +42,7 @@ const registerUser = async (req, res, next) => {
                 refreshToken: ''
             }
         });
-        await prismaContext_js_1.db.accountTemplate.create({
+        await prismaContext_1.db.accountTemplate.create({
             data: {
                 ownerId: newUser.id
             }
@@ -64,9 +64,9 @@ const registerUser = async (req, res, next) => {
     }
 };
 exports.registerUser = registerUser;
-const loginUser = async (req, res, next) => {
+const loginUser = async (req, res) => {
     try {
-        const user = await prismaContext_js_1.db.user.findUnique({
+        const user = await prismaContext_1.db.user.findUnique({
             where: {
                 email: req.body.email
             }
@@ -93,7 +93,7 @@ const loginUser = async (req, res, next) => {
             uid: user.uid,
             accessToken
         };
-        await prismaContext_js_1.db.user.update({
+        await prismaContext_1.db.user.update({
             where: {
                 email: req.body.email
             },
@@ -113,7 +113,7 @@ const loginUser = async (req, res, next) => {
     }
 };
 exports.loginUser = loginUser;
-const refresh = async (req, res, next) => {
+const refresh = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
         if (!refreshToken) {

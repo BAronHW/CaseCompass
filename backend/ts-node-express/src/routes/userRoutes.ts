@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { findAllUsers, findUserByUid } from "../controllers/userController";
+import { findAllUsers, findUserByUid } from "../controllers/userController.js";
 
 const router = Router();
 router.get('/user/:uid', findUserByUid);

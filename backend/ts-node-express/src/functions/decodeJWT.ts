@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import 'dotenv/config';
+import 'dotenv/config.js';
 
 interface JWTPayload {
     userForToken: {

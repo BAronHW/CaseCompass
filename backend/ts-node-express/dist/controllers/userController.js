@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.findAllUsers = exports.findUserByUid = void 0;
-const prismaContext_js_1 = require("../lib/prismaContext.js");
+const prismaContext_1 = require("../lib/prismaContext");
 const findUserByUid = async (req, res, next) => {
     try {
         const uuid = req.params.uuid;
@@ -11,7 +11,7 @@ const findUserByUid = async (req, res, next) => {
             });
         }
         ;
-        const user = await prismaContext_js_1.db.user.findUnique({
+        const user = await prismaContext_1.db.user.findUnique({
             where: {
                 uid: uuid
             }
@@ -33,7 +33,7 @@ const findUserByUid = async (req, res, next) => {
 exports.findUserByUid = findUserByUid;
 const findAllUsers = async (req, res, next) => {
     try {
-        const allUsers = await prismaContext_js_1.db.user.findMany();
+        const allUsers = await prismaContext_1.db.user.findMany();
         const allUsersSerialized = allUsers.map((user) => {
             const { password, ...userWithoutPassword } = user;
             return userWithoutPassword;

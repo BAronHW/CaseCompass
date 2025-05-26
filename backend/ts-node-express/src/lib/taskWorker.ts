@@ -1,8 +1,8 @@
 import { Job, Worker } from 'bullmq';
 import dotenv from 'dotenv';
-import { jobSwitchStatement } from '../functions/taskSwtichStatement';
-import { redisConnection } from './redisConnectionContext';
-import { TypeOfTask } from '../models/models';
+import { jobSwitchStatement } from '../functions/taskSwtichStatement.js';
+import { redisConnection } from './redisConnectionContext.js';
+import { TypeOfTask } from '../models/models.js';
 dotenv.config();
 
 const uploadDocumentTaskWorker = new Worker('documentTasks', async (job : Job) => {
