@@ -5,6 +5,8 @@ import { db } from "../lib/prismaContext.js";
 import { ChunkPDF } from "./chunkPDF.js";
 import { GeminiAiContext } from "../lib/GeminiAiContext.js";
 import { GoogleGenAI } from "@google/genai";
+import pgvector from 'pgvector';
+
 
 export interface UploadToS3JobData {
     file: string;
@@ -57,23 +59,39 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
 
         const arrayOfChunkedDocs = await ChunkPDF(buffer);
 
-        const gemini = new GoogleGenAI({
-            apiKey: process.env.GEMINI_KEY,
-        })
+        // const gemini = new GoogleGenAI({
+        //     apiKey: process.env.GEMINI_KEY!,
+        // })
 
-        const arrayOfEmbeddings = Promise.all(
-            await arrayOfChunkedDocs.map( async (chunk)=>{
-                return await gemini.models.embedContent({
-                    model: 'gemini-embedding-exp-03-07',
-                    contents: chunk.pageContent,
-                    config: {
-                        taskType: "SEMANTIC_SIMILARITY",
-                    }
-                })
-            })
-        );
+        // const arrayOfEmbeddings = Promise.all(
+        //     await arrayOfChunkedDocs.map( async (chunk)=>{
+        //         return await gemini.models.embedContent({
+        //             model: 'gemini-embedding-exp-03-07',
+        //             contents: chunk.pageContent,
+        //             config: {
+        //                 taskType: "SEMANTIC_SIMILARITY",
+        //             }
+        //         })
+        //     })
+        // );
 
-        console.log(arrayOfEmbeddings);
+        // console.log(arrayOfEmbeddings);
+
+        console.log(arrayOfChunkedDocs)
+
+        // const embedding = pgvector.toSql([1, 2, 3, 4])
+        // console.log(embedding);
+
+        // await db.$transaction(
+        //     arrayOfChunkedDocs.map((chunk) => 
+        //         db.documentChunks.create({
+        //             data: {
+        //                 content: chunk.pageContent,
+        //                 documentId: uploadedDocument.id,
+        //             }
+        //         })
+        //     )
+        // );
 
         // may have to write the SQL by hand since I dont think prisma can handle the raw vector.
 

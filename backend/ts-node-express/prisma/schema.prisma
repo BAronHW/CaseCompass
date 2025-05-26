@@ -1,10 +1,13 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model Document {
@@ -48,7 +51,7 @@ model User {
 
 model documentChunks {
   id Int @id @default(autoincrement())
-  embeddings Unsupported("vector")?
+  embeddings Unsupported("vector(3)")?
   content String @default("")
   document Document @relation(fields: [documentId], references: [id])
   documentId Int
