@@ -6,6 +6,7 @@ import { ChunkPDF } from "./chunkPDF.js";
 import { GeminiAiContext } from "../lib/GeminiAiContext.js";
 import { GoogleGenAI } from "@google/genai";
 import pgvector from 'pgvector';
+import { updateDocument, uploadDocument } from "../controllers/documentController.js";
 
 
 export interface UploadToS3JobData {
@@ -41,8 +42,6 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         
         const command = new PutObjectCommand(params);
         const sentDocument = await s3.send(command);
-        console.log("tstesdftesg", sentDocument)
-
         
         const uploadedDocument = await db.document.create({
             data: {
@@ -59,41 +58,47 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
 
         const arrayOfChunkedDocs = await ChunkPDF(buffer);
 
-        // const gemini = new GoogleGenAI({
-        //     apiKey: process.env.GEMINI_KEY!,
-        // })
+        const gemini = new GoogleGenAI({
+            apiKey: process.env.GEMINI_KEY!,
+        })
 
-        // const arrayOfEmbeddings = Promise.all(
-        //     await arrayOfChunkedDocs.map( async (chunk)=>{
-        //         return await gemini.models.embedContent({
-        //             model: 'gemini-embedding-exp-03-07',
-        //             contents: chunk.pageContent,
-        //             config: {
-        //                 taskType: "SEMANTIC_SIMILARITY",
-        //             }
-        //         })
-        //     })
-        // );
+        const arrayOfEmbeddingsAndAssociatedChunks = await Promise.all(
+            arrayOfChunkedDocs.map(async (chunk, index) => {
+            try {
+                const result = await gemini.models.embedContent({
+                    model: 'text-embedding-004',
+                    contents: [{
+                        parts: [{ text: chunk.pageContent }]
+                    }],
+                    config: {
+                        taskType: "SEMANTIC_SIMILARITY",
+                    }
+                });
+                return {
+                    text_chunk: chunk.pageContent,
+                    embedding: result.embeddings
+                }
+                
+            } catch (error) {
+                console.error(`Error generating embedding for chunk ${index}:`, error);
+                return null;
+            }
+            })
+        );
 
-        // console.log(arrayOfEmbeddings);
+        arrayOfEmbeddingsAndAssociatedChunks.map(async(embedding)=>{
+            const embeddingText = embedding?.text_chunk;
+            const embeddingValues = embedding.embedding[0].values;
+            try{
+                await db.$executeRaw`
+                    INSERT INTO "documentChunks" (content, "documentId", embeddings)
+                    VALUES (${embeddingText}, ${uploadedDocument.id}, ${embeddingValues}::vector)
+                `;  
+            }catch(error){
+                console.log(error)
+            }     
+        })
 
-        console.log(arrayOfChunkedDocs)
-
-        // const embedding = pgvector.toSql([1, 2, 3, 4])
-        // console.log(embedding);
-
-        // await db.$transaction(
-        //     arrayOfChunkedDocs.map((chunk) => 
-        //         db.documentChunks.create({
-        //             data: {
-        //                 content: chunk.pageContent,
-        //                 documentId: uploadedDocument.id,
-        //             }
-        //         })
-        //     )
-        // );
-
-        // may have to write the SQL by hand since I dont think prisma can handle the raw vector.
 
         return {
             key: uniqueName,

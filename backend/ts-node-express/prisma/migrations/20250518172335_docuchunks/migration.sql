@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- CreateTable
 CREATE TABLE "documentChunks" (
     "id" SERIAL NOT NULL,
-    "embeddings" vector,
+    "embeddings" vector(768),
     "documentId" INTEGER NOT NULL,
 
     CONSTRAINT "documentChunks_pkey" PRIMARY KEY ("id")
