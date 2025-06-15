@@ -2,6 +2,31 @@ import { NextFunction, Request, Response } from "express";
 import { jobQueue } from "../lib/bullMQContext.js";
 import { decodeJWT } from "../functions/decodeJWT.js";
 import { db } from "../lib/prismaContext.js";
+import { tryCatch } from "bullmq";
+
+export const getAllDocuments = async (req: Request, res: Response): Promise<void> => {
+    try{
+        const authToken = req.headers.authorization;
+    }catch(error){
+        console.error(error);
+        res.status(500).json({
+            error: 'Internal server error', 
+            details: error instanceof Error ? error.message : 'Unknown error' 
+        })
+    }
+}
+
+export const getSingleDocument = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const authToken = req.headers.authorization;
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: 'Internal server error', 
+            details: error instanceof Error ? error.message : 'Unknown error' 
+        })
+    }
+}
 
 export const uploadDocument = async (req: Request, res: Response): Promise<void> => {
     try {

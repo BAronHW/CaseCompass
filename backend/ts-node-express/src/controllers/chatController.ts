@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from "express";
 
 
 export const createNewChat = (req: Request, res: Response) => {
-    // create a new ai chat 
+    // create a new ai chat
+    
     res.json({message: "welcome to protected route"})
     return;
 }
