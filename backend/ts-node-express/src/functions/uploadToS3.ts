@@ -5,8 +5,8 @@ import { db } from "../lib/prismaContext.js";
 import { ChunkPDF } from "./chunkPDF.js";
 import { GeminiAiContext } from "../lib/GeminiAiContext.js";
 import { GoogleGenAI } from "@google/genai";
-import pgvector from 'pgvector';
-import { updateDocument, uploadDocument } from "../controllers/documentController.js";
+import fs from 'fs';
+import { error } from "console";
 
 
 export interface UploadToS3JobData {
@@ -87,8 +87,8 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         );
 
         arrayOfEmbeddingsAndAssociatedChunks.map(async(embedding)=>{
-            const embeddingText = embedding?.text_chunk;
-            const embeddingValues = embedding.embedding[0].values;
+            const embeddingText = embedding!.text_chunk;
+            const embeddingValues = embedding!.embedding![0].values;
             try{
                 await db.$executeRaw`
                     INSERT INTO "documentChunks" (content, "documentId", embeddings)
