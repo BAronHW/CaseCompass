@@ -70,13 +70,13 @@ model Chat {
   id Int @id @default(autoincrement())
   user User @relation(fields: [userId], references: [id])
   userId Int @unique
-  message Message[]
+  message Message[] 
 
 }
 
 model Message {
   id Int @id @default(autoincrement())
-  chat Chat @relation(fields: [chatId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   chatId Int @unique
   body String @default("")
   timestamp DateTime @default(now())
