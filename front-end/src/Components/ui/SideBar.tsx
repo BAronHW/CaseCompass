@@ -75,25 +75,6 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
             })}
           </ul>
         </nav>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200">
-          <div className={`flex items-center transition-opacity duration-300 ${
-            isOpen ? 'opacity-100' : 'opacity-0'
-          }`}>
-            {isOpen && (
-              <>
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                  JD
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">John Doe</p>
-                  <p className="text-xs text-gray-500">Administrator</p>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Main Content Area */}

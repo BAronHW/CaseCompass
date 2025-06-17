@@ -5,6 +5,7 @@ import LandingPage from "./LandingPage";
 import LoginPage from "./LoginPage";
 import RegisterPage from "./RegisterPage";
 import ChatPage from "./ui/ChatPage";
+import DocumentPage from "./ui/DocumentPage";
 
 export default function AppWrapper() {
     const location = useLocation();
@@ -17,6 +18,7 @@ export default function AppWrapper() {
           <Routes>
             <Route path="/upload" element={<DocumentUploader />}/> 
             <Route path="/chat" element={<ChatPage/>} />
+            <Route path="/documents" element={<DocumentPage/>}/>
           </Routes>
         </Sidebar>
       ) : (
