@@ -9,13 +9,7 @@ const DocumentUploader = () => {
   const [uploadStatus, setUploadStatus] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-
-  async function test(){
-    const cookie = await cookieStore.get('refreshToken') 
-  }
-
   const handleFileChange = (e) => {
-    test()
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }

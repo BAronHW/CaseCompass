@@ -3,10 +3,7 @@ import * as crypto from 'crypto';
 import { s3 } from "../lib/s3Context.js";
 import { db } from "../lib/prismaContext.js";
 import { ChunkPDF } from "./chunkPDF.js";
-import { GeminiAiContext } from "../lib/GeminiAiContext.js";
 import { GoogleGenAI } from "@google/genai";
-import fs from 'fs';
-import { error } from "console";
 
 
 export interface UploadToS3JobData {

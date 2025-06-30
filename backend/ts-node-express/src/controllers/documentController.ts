@@ -2,12 +2,52 @@ import { NextFunction, Request, Response } from "express";
 import { jobQueue } from "../lib/bullMQContext.js";
 import { decodeJWT } from "../functions/decodeJWT.js";
 import { db } from "../lib/prismaContext.js";
-import { tryCatch } from "bullmq";
 
 export const getAllDocuments = async (req: Request, res: Response): Promise<void> => {
     try{
         const authToken = req.headers.authorization;
-    }catch(error){
+
+        if (!authToken) {
+            res.status(401).json({ error: 'Authorization header is required' });
+            return;
+        }
+
+        const decodedAuthToken = await decodeJWT(authToken);
+        
+        if (!decodedAuthToken || !decodedAuthToken.userForToken) {
+            res.status(401).json({ error: 'Invalid or expired token' });
+            return;
+        }
+
+        const userId = decodedAuthToken.userForToken.id;
+
+        const userObj = await db.user.findUnique({
+            where: {
+                id: userId
+            }
+        })
+
+        const userUuid = userObj?.uid;
+
+        const allDocumentsWithUuid = await db.document.findMany({
+            where: {
+                uid: userUuid
+            }
+        })
+
+        if (!allDocumentsWithUuid) {
+            res.status(400).json({
+                error: 'unable to find any Documents'
+            })
+        }
+        
+        res.status(200).json({
+            allDocumentsWithUuid
+        })
+
+
+
+    } catch(error) {
         console.error(error);
         res.status(500).json({
             error: 'Internal server error', 
