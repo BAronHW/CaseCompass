@@ -135,6 +135,35 @@ export const uploadDocument = async (req: Request, res: Response): Promise<void>
     }
 };
 
+export const getDocumentById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { documentId } = req.params;
+
+        const docId = parseInt(documentId);
+
+        const foundDocumentWithId = await db.document.findUnique({
+            where: {
+                id: docId
+            }
+        })
+
+        if (!foundDocumentWithId) {
+            res.status(400).json({ error: 'unable to find document with this Id' })
+        }
+
+        res.status(200).json({
+            foundDocumentWithId
+        })
+        
+    } catch (error: any) {
+        console.log('Error in getDocumentById', error)
+        res.status(500).json({
+            error: 'Internal server error',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        })
+    }
+}
+
 export const deleteDocument = (req: Request, res: Response, next: NextFunction) => {
 
 }
