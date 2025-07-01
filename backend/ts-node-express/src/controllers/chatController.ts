@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { decodeJWT } from "../functions/decodeJWT.js";
 import { db } from "../lib/prismaContext.js";
+import { determineIfQuestion } from "../lib/questionDetermine.js";
 
 
 export const createNewChat = async (req: Request, res: Response) => {
@@ -72,36 +73,49 @@ export const pushToChat = async (req: Request, res: Response) => {
             }
         })
 
-        if(!foundChatTemplateModel){
+        if (!foundChatTemplateModel) {
             res.status(400).json({
                 error: 'Unable to find any chat model with this userId'
             })
             return;
         }
 
+        const isQuestion = determineIfQuestion(body);
+
         const foundChatId = foundChatTemplateModel?.id;
 
-        const chatText = await db.message.create({
-            data: {
-                chatId: foundChatId,
-                body: body
-            }
-        })
 
-        if(!chatText){
-            res.status(201).json({
-                message: 'Unable to create new chat message'
+
+        /**
+         * switch to use websockets here
+         */
+        if (!isQuestion) {
+            
+            const chatText = await db.message.create({
+                data: {
+                    chatId: foundChatId,
+                    body: body
+                }
             })
-            return;
-        }
 
-        res.status(201).json({
-            message: {
-                id: chatText.id,
-                chatId: chatText.chatId
+            if(!chatText){
+                res.status(201).json({
+                    message: 'Unable to create new chat message'
+                })
+                return;
             }
-        })
+
+            res.status(201).json({
+                message: {
+                    id: chatText.id,
+                    chatId: chatText.chatId
+                }
+            }
+        )
         return;
+
+        }
+        
     } catch (error) {
         console.log(error)
         throw new Error('unable to create new chat message')

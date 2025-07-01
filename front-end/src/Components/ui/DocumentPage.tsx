@@ -27,7 +27,6 @@ function DocumentPage() {
         const data = await customFetch(
           'http://localhost:3000/api/documents/', 
           requestTypeEnum.GET, 
-          accessToken ?? undefined
         );
         
         console.log('Response data:', data);

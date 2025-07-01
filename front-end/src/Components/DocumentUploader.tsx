@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
 import { customFetch, requestTypeEnum } from '../lib/customFetch';
 
 const DocumentUploader = () => {
-  const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState(null);
@@ -14,19 +12,6 @@ const DocumentUploader = () => {
       setFile(e.target.files[0]);
     }
   };
-
-  const logOut = async () => {
-    const res = await fetch('http://localhost:3000/api/auth/logout', {
-      method: 'POST',
-      credentials: 'include'
-    })
-    if(res.ok){
-      sessionStorage.removeItem('Authorization');
-    }
-    if(res.ok){
-      navigate('/')
-    }
-  }
 
   const uploadDocument = async () => {
     if (!file) {
@@ -60,8 +45,7 @@ const DocumentUploader = () => {
         });
       }, 100);
 
-      const accessToken = sessionStorage.getItem('Authorization');
-      await customFetch('http://localhost:3000/api/documents/createDocument', requestTypeEnum.POST, accessToken ?? undefined, payload)
+      await customFetch('http://localhost:3000/api/documents/createDocument', requestTypeEnum.POST, payload)
       clearInterval(progressInterval);
       setUploadStatus({success: true, message: 'Sucessfully uploaded document'})
     } catch (error) {
@@ -82,7 +66,6 @@ const DocumentUploader = () => {
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md m-10">
-      <button onClick={logOut} className='hover:bg-sky-700'>Log Out</button>
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Upload Document</h2>
       
       <div className="mb-4">

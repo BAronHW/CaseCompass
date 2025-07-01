@@ -4,7 +4,8 @@ import {
   FileText, 
   ChevronLeft,
   ChevronRight,
-  MessageSquareText
+  MessageSquareText,
+  LogOut
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
@@ -23,6 +24,19 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
     setIsOpen(!isOpen);
   };
 
+  const logOut = async () => {
+    const res = await fetch('http://localhost:3000/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include'
+    })
+    if(res.ok){
+      sessionStorage.removeItem('Authorization');
+    }
+    if(res.ok){
+      navigation('/')
+    }
+  }
+  
   const sideBarOnClick = (itemId: string): void => {
     setActiveItem(itemId);
     navigation(itemId.toLocaleLowerCase());
@@ -49,35 +63,48 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
           </button>
         </div>
 
-        <nav className="flex-1 p-4">
-          <ul className="space-y-2">
-            {menuItems.map((item) => {
-              const IconComponent = item.icon;
-              return (
-                <li key={item.id}>
-                  <button
-                    onClick={() => sideBarOnClick(item.id)}
-                    className={`w-full flex items-center p-3 rounded-lg transition-all duration-200 ${
-                      activeItem === item.id
-                        ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
-                  >
-                    <IconComponent size={20} className="flex-shrink-0" />
-                    <span className={`ml-3 transition-opacity duration-300 ${
-                      isOpen ? 'opacity-100' : 'opacity-0'
-                    }`}>
-                      {isOpen && item.label}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </nav>
+        <nav className="flex-1 p-4 flex flex-col">
+        <ul className="flex flex-col space-y-2 flex-1">
+          {menuItems.map((item) => {
+            const IconComponent = item.icon;
+            return (
+              <li key={item.id}>
+                <button
+                  onClick={() => sideBarOnClick(item.id)}
+                  className={`w-full flex items-center p-3 rounded-lg transition-all duration-200 ${
+                    activeItem === item.id
+                      ? 'bg-blue-50 text-blue-600 border-r-4 border-blue-600'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <IconComponent size={20} className="flex-shrink-0" />
+                  <span className={`ml-3 transition-opacity duration-300 ${
+                    isOpen ? 'opacity-100' : 'opacity-0'
+                  }`}>
+                    {isOpen && item.label}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        
+        <div className="pt-4 mt-auto border-t border-gray-200">
+          <button
+            onClick={() => logOut()}
+            className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+          >
+            <LogOut size={20} className="flex-shrink-0" />
+            <span className={`ml-3 transition-opacity duration-300 ${
+              isOpen ? 'opacity-100' : 'opacity-0'
+            }`}>
+              {isOpen && 'Logout'}
+            </span>
+          </button>
+        </div>
+      </nav>
       </div>
 
-      {/* Main Content Area */}
       <div className="flex-1 overflow-auto">
         {children}
       </div>

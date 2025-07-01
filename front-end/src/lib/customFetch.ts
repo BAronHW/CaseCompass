@@ -3,11 +3,11 @@ import { requestTypeEnum } from "../interfacesEnumsAndTypes/enums";
  * Maybe break down this function into smaller parts
  */
 
-export const customFetch = async (url: string, requestType: requestTypeEnum, accessToken?: string, body?: Record<string, unknown>) => {
+export const customFetch = async (url: string, requestType: requestTypeEnum, body?: Record<string, unknown>) => {
 
     try{
 
-        const serializedRequestType = () : string | Error=> {
+        const serializedRequestType = () : string | Error => {
 
             switch(requestType){
                 case requestTypeEnum.GET:
@@ -29,6 +29,8 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, acc
         }
 
         const method = serializedRequestType().toString()
+
+        const accessToken = sessionStorage.getItem('Authorization')
 
         const headerWithToken = {
             "Content-Type": "application/json",
