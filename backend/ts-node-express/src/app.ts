@@ -46,8 +46,9 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 io.on('connection', (socket) => {
   console.log('connected to websocket')
 
-  socket.on('connect-to-chat', (data) => {
-    console.log('connecting to chat', data);
+  socket.on('connect-to-chat', (id, msg) => {
+    console.log('Aaron here');
+    socket.to(id).emit('my message', msg)
   })
 
   socket.emit('welcome', { 
