@@ -3,6 +3,7 @@ import { decodeJWT } from "../functions/decodeJWT.js";
 import { db } from "../lib/prismaContext.js";
 import { determineIfQuestion } from "../lib/questionDetermine.js";
 
+// TODO: use websockets
 
 export const createNewChat = async (req: Request, res: Response) => {
     try {

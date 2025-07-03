@@ -77,6 +77,8 @@ model Chat {
 model Message {
   id Int @id @default(autoincrement())
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  role String
+  metaData Json?
   chatId Int @unique
   body String @default("")
   timestamp DateTime @default(now())
