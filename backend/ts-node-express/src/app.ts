@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import http from 'http'
 import { Server } from 'socket.io';
+import { db } from './lib/prismaContext.js';
 
 const app = express();
 const server = http.createServer(app)
@@ -46,9 +47,40 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 io.on('connection', (socket) => {
   console.log('connected to websocket')
 
-  socket.on('connect-to-chat', (id, msg) => {
-    console.log('Aaron here');
-    socket.to(id).emit('my message', msg)
+    const userId = socket.data?.userId || socket.handshake.query.userId;
+
+  socket.on('connect-to-chat-room', async ({ userId, chatRoomId, action, roomData }) => {
+    try {
+
+      let chatRoom;
+
+      /**
+       * model Chat {
+         id Int @id @default(autoincrement())
+         user User @relation(fields: [userId], references: [id])
+         userId Int @unique
+         message Message[] 
+      }
+      */
+      
+      if (action === 'create') {
+        chatRoom = await db.chat.create({
+          data: {
+            userId: userId
+          }
+        })
+      }
+      else if (action === 'join') {
+        chatRoom = await db.chat.findUnique({
+          where: {
+            userId: userId
+          }
+        })
+      }
+
+    } catch (error) {
+      console.log('error with connect-tochat-room', error)
+    }
   })
 
   socket.emit('welcome', { 
