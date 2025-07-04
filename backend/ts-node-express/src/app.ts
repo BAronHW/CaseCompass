@@ -10,6 +10,7 @@ import session from 'express-session';
 import http from 'http'
 import { Server } from 'socket.io';
 import { db } from './lib/prismaContext.js';
+import { GenerateContentResponse, GoogleGenAI } from "@google/genai";
 
 const app = express();
 const server = http.createServer(app)
@@ -45,23 +46,14 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 io.on('connection', (socket) => {
-  console.log('connected to websocket')
 
     const userId = socket.data?.userId || socket.handshake.query.userId;
+    const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
 
-  socket.on('connect-to-chat-room', async ({ userId, chatRoomId, action, roomData }) => {
+  socket.on('connect-to-chat-room', async ({ userId, action }) => {
     try {
 
       let chatRoom;
-
-      /**
-       * model Chat {
-         id Int @id @default(autoincrement())
-         user User @relation(fields: [userId], references: [id])
-         userId Int @unique
-         message Message[] 
-      }
-      */
       
       if (action === 'create') {
         chatRoom = await db.chat.create({
@@ -70,6 +62,7 @@ io.on('connection', (socket) => {
           }
         })
       }
+
       else if (action === 'join') {
         chatRoom = await db.chat.findUnique({
           where: {
@@ -78,8 +71,74 @@ io.on('connection', (socket) => {
         })
       }
 
+      socket.emit('chat-created', {
+        message: 'Chat room created successfully',
+        chatRoom: chatRoom
+      });
+
     } catch (error) {
       console.log('error with connect-tochat-room', error)
+    }
+  })
+
+
+  socket.on('send-message', async ({ chatRoomId, messageBody }) => {
+    try {
+
+      const chatRoom = await db.chat.findUnique({
+        where: {
+          id: chatRoomId
+        }
+      })
+
+      if (!chatRoom) {
+        console.log('error finding existing chatroom in sending message');
+      }
+
+      const newMessage = await db.message.create({
+        data: {
+          chatId: chatRoom!.id,
+          body: messageBody,
+          role: 'user',
+          isHuman: true
+        }
+      })
+
+      if (!newMessage) {
+        console.log('error creating new message in the database');
+      }
+
+      socket.emit('new-human-message', {
+        message: 'New message sent successfully',
+        newMessage: newMessage
+      })
+
+      const generateLlmmResponse = async (body: string): Promise<GenerateContentResponse> => {
+        const response = await genAI.models.generateContent({
+          model: 'gemini-2.0-flash-001',
+          contents: messageBody,
+        });
+        return response;
+      }
+
+      const llmResp = await generateLlmmResponse(messageBody);
+
+      const newLlmResponse = await db.message.create({
+        data: {
+          chatId: chatRoomId,
+          role: 'llm',
+          body: llmResp.text,
+          isHuman: false
+        }
+      })
+
+      socket.emit('new-llm-response', {
+        message: 'New Llm Message sent successfully',
+        newLlmMessage: newLlmResponse
+      })
+
+    } catch (error) {
+      console.log('error with sednign message', error)
     }
   })
 

@@ -78,7 +78,7 @@ model Message {
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   role String
   metaData Json?
-  chatId Int @unique
+  chatId Int
   body String @default("")
   timestamp DateTime @default(now())
   isHuman Boolean @default(true)
