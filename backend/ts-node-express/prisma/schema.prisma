@@ -1,85 +1,76 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
-
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
   extensions = [vector]
 }
 
-model Document {
-  id          Int           @id @default(autoincrement())
-  key         String        @unique
-  size        Int
-  title       String? @default("")
-  content     String? @default("")
-  user        User          @relation(fields: [uid], references: [uid])
-  uid         String
-  accountTemplate accountTemplate[]
-  documentComments documentComments[]
-  documentChunks documentChunks[]
-  tags tags[]
-}
-
 model tags {
-  id Int @id @default(autoincrement())
-  title String @default("")
-  document Document @relation(fields: [documentId], references: [id])
-  documentId Int @unique
+  id         Int    @id @default(autoincrement())
+  title      String @default("")
+  documentId Int    @unique
 }
 
 model documentComments {
-  id Int @id @default(autoincrement())
-  title String @default("")
-  content String @default("")
-  document Document @relation(fields: [documentId], references: [id])
-  documentId Int @unique
+  id         Int    @id @default(autoincrement())
+  title      String @default("")
+  content    String @default("")
+  documentId Int    @unique
 }
 
 model accountTemplate {
-  id Int @id @default(autoincrement())
-  ownerId Int @unique
-  owner User @relation(fields: [ownerId], references: [id])
-  documents Document[]
+  id                        Int                         @id @default(autoincrement())
+  ownerId                   Int                         @unique
+  DocumentToaccountTemplate DocumentToaccountTemplate[]
+  owner                     User                        @relation(fields: [ownerId], references: [id])
 }
 
 model User {
-  id      Int      @id @default(autoincrement())
-  name    String?  @db.VarChar(255)
-  email   String   @unique @db.VarChar(255)
-  Document    Document[]
-  uid String @unique @db.VarChar(255)
-  password String 
-  refreshToken String
-  accountTemplate accountTemplate[]
-  Chat Chat?
+  id              Int              @id @default(autoincrement())
+  name            String?          @db.VarChar(255)
+  email           String           @unique @db.VarChar(255)
+  uid             String           @unique @db.VarChar(255)
+  password        String
+  refreshToken    String
+  Chat            Chat?
+  accountTemplate accountTemplate?
 }
 
 model documentChunks {
-  id Int @id @default(autoincrement())
-  embeddings Unsupported("vector(768)")?
-  content String @default("")
-  document Document @relation(fields: [documentId], references: [id])
+  id         Int                    @id @default(autoincrement())
+  embeddings Unsupported("vector")?
   documentId Int
+  content    String                 @default("")
 }
 
 model Chat {
-  id Int @id @default(autoincrement())
-  user User @relation(fields: [userId], references: [id])
-  userId Int @unique
-  message Message[] 
+  id      Int       @id @default(autoincrement())
+  userId  Int       @unique
+  user    User      @relation(fields: [userId], references: [id])
+  message Message[]
 }
 
 model Message {
-  id Int @id @default(autoincrement())
-  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  role String
-  metaData Json?
-  chatId Int
-  body String @default("")
+  id        Int      @id @default(autoincrement())
+  chatId    Int
+  body      String   @default("")
   timestamp DateTime @default(now())
-  isHuman Boolean @default(true)
+  isHuman   Boolean  @default(true)
+  metaData  Json?
+  role      String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+}
+
+model DocumentToaccountTemplate {
+  A               Int
+  B               Int
+  accountTemplate accountTemplate @relation(fields: [B], references: [id], onDelete: Cascade)
+
+  @@id([A, B], map: "_DocumentToaccountTemplate_AB_pkey")
+  @@index([B], map: "_DocumentToaccountTemplate_B_index")
+  @@map("_DocumentToaccountTemplate")
 }

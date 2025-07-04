@@ -45,6 +45,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+//need to use middlware to validate this
 io.on('connection', (socket) => {
 
     const userId = socket.data?.userId || socket.handshake.query.userId;
@@ -69,6 +70,11 @@ io.on('connection', (socket) => {
             userId: userId
           }
         })
+
+        if (chatRoom) {
+          socket.join(chatRoom.id.toString());
+          console.log('joined room', chatRoom.id)
+        }
       }
 
       socket.emit('chat-created', {

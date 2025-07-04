@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypt from 'crypto';
 import 'dotenv/config.js';
+import { error } from "console";
 
 /**
  * TODO:
@@ -42,6 +43,19 @@ export const registerUser = async (req: Request, res: Response) => {
                 password: hashedPassword,
                 uid: uuid,
                 refreshToken:''
+
+            }
+        })
+
+        if (!newUser) {
+            res.status(400).json({
+                error: 'Unable to make new user'
+            })
+        }
+
+        await db.chat.create({
+            data: {
+                userId: newUser.id,
 
             }
         })
