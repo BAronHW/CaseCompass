@@ -53,7 +53,7 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
           <div className={`font-bold text-xl text-gray-800 transition-opacity duration-300 ${
             isOpen ? 'opacity-100' : 'opacity-0'
           }`}>
-            {isOpen && 'Dashboard'}
+            {isOpen && 'Case Compass'}
           </div>
           <button
             onClick={toggleSidebar}
