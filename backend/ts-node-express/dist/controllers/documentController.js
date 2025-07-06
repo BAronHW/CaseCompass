@@ -1,10 +1,60 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.batchAnalyzeDocument = exports.analyzeSingleDocument = exports.updateDocument = exports.deleteDocument = exports.uploadDocument = void 0;
-const bullMQContext_1 = require("../lib/bullMQContext");
-const decodeJWT_1 = require("../functions/decodeJWT");
-const prismaContext_1 = require("../lib/prismaContext");
-const uploadDocument = async (req, res) => {
+import { jobQueue } from "../lib/bullMQContext.js";
+import { decodeJWT } from "../functions/decodeJWT.js";
+import { db } from "../lib/prismaContext.js";
+export const getAllDocuments = async (req, res) => {
+    try {
+        const authToken = req.headers.authorization;
+        if (!authToken) {
+            res.status(401).json({ error: 'Authorization header is required' });
+            return;
+        }
+        const decodedAuthToken = await decodeJWT(authToken);
+        if (!decodedAuthToken || !decodedAuthToken.userForToken) {
+            res.status(401).json({ error: 'Invalid or expired token' });
+            return;
+        }
+        const userId = decodedAuthToken.userForToken.id;
+        const userObj = await db.user.findUnique({
+            where: {
+                id: userId
+            }
+        });
+        const userUuid = userObj?.uid;
+        const allDocumentsWithUuid = await db.document.findMany({
+            where: {
+                uid: userUuid
+            }
+        });
+        if (!allDocumentsWithUuid) {
+            res.status(400).json({
+                error: 'unable to find any Documents'
+            });
+        }
+        res.status(200).json({
+            allDocumentsWithUuid
+        });
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: 'Internal server error',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+};
+export const getSingleDocument = async (req, res) => {
+    try {
+        const authToken = req.headers.authorization;
+    }
+    catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: 'Internal server error',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+};
+export const uploadDocument = async (req, res) => {
     try {
         const { name, size, file } = req.body;
         const authToken = req.headers.authorization;
@@ -12,13 +62,13 @@ const uploadDocument = async (req, res) => {
             res.status(401).json({ error: 'Authorization header is required' });
             return;
         }
-        const decodedAuthToken = await (0, decodeJWT_1.decodeJWT)(authToken);
+        const decodedAuthToken = await decodeJWT(authToken);
         if (!decodedAuthToken || !decodedAuthToken.userForToken) {
             res.status(401).json({ error: 'Invalid or expired token' });
             return;
         }
         const userId = decodedAuthToken.userForToken.id;
-        const user = await prismaContext_1.db.user.findUnique({
+        const user = await db.user.findUnique({
             where: {
                 id: userId
             }
@@ -31,7 +81,7 @@ const uploadDocument = async (req, res) => {
             res.status(400).json({ error: 'Missing required fields: name, size, or file' });
             return;
         }
-        await bullMQContext_1.jobQueue.add('uploadDocumentToS3', {
+        await jobQueue.add('uploadDocumentToS3', {
             name: name,
             size: size,
             file: file,
@@ -58,16 +108,35 @@ const uploadDocument = async (req, res) => {
         });
     }
 };
-exports.uploadDocument = uploadDocument;
-const deleteDocument = (req, res, next) => {
+export const getDocumentById = async (req, res, next) => {
+    try {
+        const { documentId } = req.params;
+        const docId = parseInt(documentId);
+        const foundDocumentWithId = await db.document.findUnique({
+            where: {
+                id: docId
+            }
+        });
+        if (!foundDocumentWithId) {
+            res.status(400).json({ error: 'unable to find document with this Id' });
+        }
+        res.status(200).json({
+            foundDocumentWithId
+        });
+    }
+    catch (error) {
+        console.log('Error in getDocumentById', error);
+        res.status(500).json({
+            error: 'Internal server error',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
 };
-exports.deleteDocument = deleteDocument;
-const updateDocument = (req, res, next) => {
+export const deleteDocument = (req, res, next) => {
 };
-exports.updateDocument = updateDocument;
-const analyzeSingleDocument = (req, res, next) => {
+export const updateDocument = (req, res, next) => {
 };
-exports.analyzeSingleDocument = analyzeSingleDocument;
-const batchAnalyzeDocument = (req, res, next) => {
+export const analyzeSingleDocument = (req, res, next) => {
 };
-exports.batchAnalyzeDocument = batchAnalyzeDocument;
+export const batchAnalyzeDocument = (req, res, next) => {
+};

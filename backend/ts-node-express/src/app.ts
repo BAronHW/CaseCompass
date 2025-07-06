@@ -11,6 +11,7 @@ import http from 'http'
 import { Server } from 'socket.io';
 import { db } from './lib/prismaContext.js';
 import { GenerateContentResponse, GoogleGenAI } from "@google/genai";
+import { decodeJWT } from './functions/decodeJWT.js';
 
 const app = express();
 const server = http.createServer(app)
@@ -46,51 +47,87 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 //need to use middlware to validate this
+/**
+ * need to set the current chatRoomId in the socket
+ * 1. pass the current JWT to the connect-to-chat-room as data
+ * 2. authenticate the JWT to see if valid
+ * 3. if valid allow the user to 
+ */
+
+/**
+ * 
+ */
 io.on('connection', (socket) => {
 
     const userId = socket.data?.userId || socket.handshake.query.userId;
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
 
-  socket.on('connect-to-chat-room', async ({ userId, action }) => {
+  socket.on('connect-to-chat-room', async ({ userId }) => {
     try {
 
       let chatRoom;
+      // console.log(JWT, 'jwt here')
+      // const isUserAuth = decodeJWT(JWT);
       
-      if (action === 'create') {
-        chatRoom = await db.chat.create({
-          data: {
-            userId: userId
-          }
-        })
-      }
 
-      else if (action === 'join') {
-        chatRoom = await db.chat.findUnique({
-          where: {
-            userId: userId
-          }
-        })
+      // if (!isUserAuth) {
+      //   throw new Error('unable to authenticate JWT in connect to chat room')
+      // }
 
-        if (chatRoom) {
-          socket.join(chatRoom.id.toString());
-          console.log('joined room', chatRoom.id)
+      chatRoom = await db.chat.findUnique({
+        where: {
+          userId: userId
         }
-      }
+      })
 
-      socket.emit('chat-created', {
-        message: 'Chat room created successfully',
-        chatRoom: chatRoom
-      });
+      if (chatRoom) {
+        const roomId = `chat:${chatRoom.id}`;
+        socket.join(roomId);
+        console.log('joined room', chatRoom.id)
+        socket.data.currentRoomId = roomId;
+        socket.data.currentUserId = userId;
+
+        socket.emit('chat-created', {
+          message: 'Chat room created successfully',
+          chatRoom: chatRoom
+        });
+      } else {
+        socket.emit('chat-created', {
+          error: 'unabel to join chatroom'
+        });
+      }
 
     } catch (error) {
       console.log('error with connect-tochat-room', error)
     }
   })
 
+  /**
+   * {
+    "chatRoomId": "chat:1",
+    "messageBody": "test here"
+}
+   */
 
-  socket.on('send-message', async ({ chatRoomId, messageBody }) => {
+
+  socket.on('send-message', async ({ messageBody }) => {
     try {
+      console.log('here');
+      const roomId = socket.data.currentRoomId;
 
+      console.log(roomId, 'this is the roomId')
+      
+      if (!roomId) {
+        console.log('no room or chatroomid')
+        socket.emit('error', {
+          error: 'You must join a chat room first'
+        });
+        return;
+      }
+
+      console.log('roomId here', roomId)
+
+      const chatRoomId = Number(roomId.slice(5))
       const chatRoom = await db.chat.findUnique({
         where: {
           id: chatRoomId
@@ -114,7 +151,7 @@ io.on('connection', (socket) => {
         console.log('error creating new message in the database');
       }
 
-      socket.emit('new-human-message', {
+      socket.to(`chat:${roomId}`).emit('new-human-message', {
         message: 'New message sent successfully',
         newMessage: newMessage
       })
@@ -122,7 +159,7 @@ io.on('connection', (socket) => {
       const generateLlmmResponse = async (body: string): Promise<GenerateContentResponse> => {
         const response = await genAI.models.generateContent({
           model: 'gemini-2.0-flash-001',
-          contents: messageBody,
+          contents: body,
         });
         return response;
       }
@@ -138,13 +175,13 @@ io.on('connection', (socket) => {
         }
       })
 
-      socket.emit('new-llm-response', {
+      socket.to(chatRoomId).emit('new-llm-response', {
         message: 'New Llm Message sent successfully',
         newLlmMessage: newLlmResponse
       })
 
     } catch (error) {
-      console.log('error with sednign message', error)
+      console.log('error with sending message', error)
     }
   })
 

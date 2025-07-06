@@ -9,24 +9,40 @@ datasource db {
   extensions = [vector]
 }
 
+model Document {
+  id               Int               @id @default(autoincrement())
+  key              String            @unique
+  size             Int
+  uid              String
+  content          String?           @default("")
+  title            String?           @default("")
+  user             User              @relation(fields: [uid], references: [uid])
+  documentChunks   documentChunks[]
+  documentComments documentComments?
+  tags             tags?
+  accountTemplate  accountTemplate[] @relation("DocumentToaccountTemplate")
+}
+
 model tags {
-  id         Int    @id @default(autoincrement())
-  title      String @default("")
-  documentId Int    @unique
+  id         Int      @id @default(autoincrement())
+  title      String   @default("")
+  documentId Int      @unique
+  Document   Document @relation(fields: [documentId], references: [id])
 }
 
 model documentComments {
-  id         Int    @id @default(autoincrement())
-  title      String @default("")
-  content    String @default("")
-  documentId Int    @unique
+  id         Int      @id @default(autoincrement())
+  title      String   @default("")
+  content    String   @default("")
+  documentId Int      @unique
+  Document   Document @relation(fields: [documentId], references: [id])
 }
 
 model accountTemplate {
-  id                        Int                         @id @default(autoincrement())
-  ownerId                   Int                         @unique
-  DocumentToaccountTemplate DocumentToaccountTemplate[]
-  owner                     User                        @relation(fields: [ownerId], references: [id])
+  id       Int        @id @default(autoincrement())
+  ownerId  Int        @unique
+  owner    User       @relation(fields: [ownerId], references: [id])
+  Document Document[] @relation("DocumentToaccountTemplate")
 }
 
 model User {
@@ -37,6 +53,7 @@ model User {
   password        String
   refreshToken    String
   Chat            Chat?
+  Document        Document[]
   accountTemplate accountTemplate?
 }
 
@@ -45,6 +62,7 @@ model documentChunks {
   embeddings Unsupported("vector")?
   documentId Int
   content    String                 @default("")
+  Document   Document               @relation(fields: [documentId], references: [id])
 }
 
 model Chat {
@@ -63,14 +81,4 @@ model Message {
   metaData  Json?
   role      String
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
-}
-
-model DocumentToaccountTemplate {
-  A               Int
-  B               Int
-  accountTemplate accountTemplate @relation(fields: [B], references: [id], onDelete: Cascade)
-
-  @@id([A, B], map: "_DocumentToaccountTemplate_AB_pkey")
-  @@index([B], map: "_DocumentToaccountTemplate_B_index")
-  @@map("_DocumentToaccountTemplate")
 }

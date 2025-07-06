@@ -1,10 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.jobQueue = void 0;
-const bullmq_1 = require("bullmq");
-const redisConnectionContext_1 = require("./redisConnectionContext");
-exports.jobQueue = new bullmq_1.Queue('documentTasks', {
-    connection: redisConnectionContext_1.redisConnection,
+import { Queue } from 'bullmq';
+import { redisConnection } from './redisConnectionContext.js';
+export const jobQueue = new Queue('documentTasks', {
+    connection: redisConnection,
     defaultJobOptions: {
         attempts: 3,
         backoff: {

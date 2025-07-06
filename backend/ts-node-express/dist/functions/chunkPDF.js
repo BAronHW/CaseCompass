@@ -1,33 +1,30 @@
-"use strict";
 /**
  *  take a pdf buffer and write into a temporary file
     try and load the file from the temp file path
     once loaded delete the tempfile path
  */
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ChunkPDF = ChunkPDF;
-const textsplitters_1 = require("@langchain/textsplitters");
-const pdf_1 = require("@langchain/community/document_loaders/fs/pdf");
-const path_1 = require("path");
-const os_1 = require("os");
-const documents_1 = require("@langchain/core/documents");
-const fs_1 = require("fs");
-async function ChunkPDF(pdfBuffer) {
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { join } from "path";
+import { tmpdir } from "os";
+import { Document } from "@langchain/core/documents";
+import { unlinkSync, writeFileSync } from "fs";
+export async function ChunkPDF(pdfBuffer) {
     let tempFilePath = null;
     try {
-        tempFilePath = (0, path_1.join)((0, os_1.tmpdir)(), `temp_pdf_${Date.now()}.pdf`);
-        (0, fs_1.writeFileSync)(tempFilePath, pdfBuffer);
-        const loader = new pdf_1.PDFLoader(tempFilePath, {
+        tempFilePath = join(tmpdir(), `temp_pdf_${Date.now()}.pdf`);
+        writeFileSync(tempFilePath, pdfBuffer);
+        const loader = new PDFLoader(tempFilePath, {
             splitPages: true,
         });
         const docs = await loader.load();
-        const splitter = new textsplitters_1.RecursiveCharacterTextSplitter({
+        const splitter = new RecursiveCharacterTextSplitter({
             chunkSize: 500, // Increased from 50 for more meaningful chunks
             chunkOverlap: 50, // Increased from 1 for better context preservation
         });
         const chunkedDocuments = await Promise.all(docs.map(async (doc) => {
             return await splitter.splitDocuments([
-                new documents_1.Document({
+                new Document({
                     pageContent: doc.pageContent,
                     metadata: { ...doc.metadata }
                 })
@@ -42,7 +39,7 @@ async function ChunkPDF(pdfBuffer) {
     finally {
         if (tempFilePath) {
             try {
-                (0, fs_1.unlinkSync)(tempFilePath);
+                unlinkSync(tempFilePath);
             }
             catch (unlinkError) {
                 console.warn('Warning: Could not delete temp file:', unlinkError);

@@ -1,11 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.GeminiAiContext = void 0;
-const AIContext_1 = require("./AIContext");
-const genai_1 = require("@google/genai");
-class GeminiAiContext extends AIContext_1.AiContext {
+import { AiContext } from "./AIContext.js";
+import { GoogleGenAI } from "@google/genai";
+export class GeminiAiContext extends AiContext {
     constructor(apiKey) {
-        super(genai_1.GoogleGenAI, apiKey, 'gemini-embedding-exp-03-07');
+        super(GoogleGenAI, apiKey, 'gemini-embedding-exp-03-07');
     }
     async getEmbeddings(inputText) {
         try {
@@ -26,4 +23,3 @@ class GeminiAiContext extends AIContext_1.AiContext {
         }
     }
 }
-exports.GeminiAiContext = GeminiAiContext;

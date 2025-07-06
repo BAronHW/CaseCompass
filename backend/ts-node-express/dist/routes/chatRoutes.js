@@ -1,10 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const chatController_1 = require("../controllers/chatController");
-const verifyToken_1 = require("../middlewares/verifyToken");
-const router = (0, express_1.Router)();
-router.post('/chat/:chatId', verifyToken_1.verifyToken, chatController_1.pushToChat);
-router.post('/chat', verifyToken_1.verifyToken, chatController_1.createNewChat);
-router.delete('/chat/:chatId', verifyToken_1.verifyToken, chatController_1.deleteChat);
-exports.default = router;
+import { Router } from "express";
+import { createNewChat, deleteChat, pushToChat } from "../controllers/chatController.js";
+import { verifyToken } from "../middlewares/verifyToken.js";
+const router = Router();
+router.post('/chat/:chatId', verifyToken, pushToChat);
+router.post('/chat', verifyToken, createNewChat);
+router.delete('/chat/:chatId', verifyToken, deleteChat);
+export default router;

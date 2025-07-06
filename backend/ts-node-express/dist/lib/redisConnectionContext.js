@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.redisConnection = void 0;
-exports.redisConnection = {
+export const redisConnection = {
     host: 'localhost',
     port: 6379,
 };

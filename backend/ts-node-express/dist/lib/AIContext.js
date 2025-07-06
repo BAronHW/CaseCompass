@@ -1,7 +1,6 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AiContext = void 0;
-class AiContext {
+export class AiContext {
+    client;
+    modelName;
     constructor(AiInstance, apiKey, modelName) {
         this.client = new AiInstance({ apiKey });
         this.modelName = modelName;
@@ -35,4 +34,3 @@ class AiContext {
         return this.modelName;
     }
 }
-exports.AiContext = AiContext;

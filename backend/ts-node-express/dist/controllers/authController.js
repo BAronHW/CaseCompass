@@ -1,28 +1,21 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.logout = exports.refresh = exports.loginUser = exports.registerUser = exports.protectedRoute = void 0;
-const prismaContext_1 = require("../lib/prismaContext");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const bcryptjs_1 = __importDefault(require("bcryptjs"));
-const crypto_1 = __importDefault(require("crypto"));
-require("dotenv/config");
+import { db } from "../lib/prismaContext.js";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import crypt from 'crypto';
+import 'dotenv/config.js';
 /**
  * TODO:
  * 1. refactor to use transactions to ensure atomic mutations\
  * 2. refactor so that instead of using refresh-tokens in cookies
  */
-const protectedRoute = (req, res) => {
+export const protectedRoute = (req, res) => {
     res.json({ message: "welcome to protected route" });
     return;
 };
-exports.protectedRoute = protectedRoute;
-const registerUser = async (req, res) => {
+export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
-        const userHasExists = await prismaContext_1.db.user.findFirst({
+        const userHasExists = await db.user.findFirst({
             where: {
                 email: email
             }
@@ -31,9 +24,9 @@ const registerUser = async (req, res) => {
             res.status(400).send('This user already exists!');
             return;
         }
-        const hashedPassword = await bcryptjs_1.default.hash(password, 10);
-        const uuid = crypto_1.default.randomUUID();
-        const newUser = await prismaContext_1.db.user.create({
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const uuid = crypt.randomUUID();
+        const newUser = await db.user.create({
             data: {
                 name: name,
                 email: email,
@@ -42,7 +35,17 @@ const registerUser = async (req, res) => {
                 refreshToken: ''
             }
         });
-        await prismaContext_1.db.accountTemplate.create({
+        if (!newUser) {
+            res.status(400).json({
+                error: 'Unable to make new user'
+            });
+        }
+        await db.chat.create({
+            data: {
+                userId: newUser.id,
+            }
+        });
+        await db.accountTemplate.create({
             data: {
                 ownerId: newUser.id
             }
@@ -63,10 +66,9 @@ const registerUser = async (req, res) => {
         return;
     }
 };
-exports.registerUser = registerUser;
-const loginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
     try {
-        const user = await prismaContext_1.db.user.findUnique({
+        const user = await db.user.findUnique({
             where: {
                 email: req.body.email
             }
@@ -75,7 +77,7 @@ const loginUser = async (req, res) => {
             res.status(401).json({ message: 'This user does not exist please register or the credentials you have entered are wrong' });
             return;
         }
-        const passwordMatch = await bcryptjs_1.default.compare(req.body.password, user.password);
+        const passwordMatch = await bcrypt.compare(req.body.password, user.password);
         if (!passwordMatch) {
             res.status(401).json({ message: 'invalid credentials' });
             return;
@@ -85,15 +87,15 @@ const loginUser = async (req, res) => {
             email: user.email
         };
         const jwtSecret = process.env.JWT_SECRET;
-        const accessToken = jsonwebtoken_1.default.sign({ userForToken }, jwtSecret, { expiresIn: '1h' });
-        const refreshToken = jsonwebtoken_1.default.sign({ userForToken }, jwtSecret, { expiresIn: '1d' });
+        const accessToken = jwt.sign({ userForToken }, jwtSecret, { expiresIn: '1h' });
+        const refreshToken = jwt.sign({ userForToken }, jwtSecret, { expiresIn: '1d' });
         const returnUser = {
             name: user.name,
             email: user.email,
             uid: user.uid,
             accessToken
         };
-        await prismaContext_1.db.user.update({
+        await db.user.update({
             where: {
                 email: req.body.email
             },
@@ -112,8 +114,7 @@ const loginUser = async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 };
-exports.loginUser = loginUser;
-const refresh = async (req, res) => {
+export const refresh = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
         if (!refreshToken) {
@@ -121,14 +122,14 @@ const refresh = async (req, res) => {
             return;
         }
         const jwtSecret = process.env.JWT_SECRET;
-        const isValidRefreshToken = jsonwebtoken_1.default.verify(refreshToken, jwtSecret);
+        const isValidRefreshToken = jwt.verify(refreshToken, jwtSecret);
         if (!isValidRefreshToken) {
             res.status(400).json({ message: "invalid refresh token" });
             return;
         }
         // @ts-ignore
         const user = isValidRefreshToken.userForToken;
-        const newAccessToken = jsonwebtoken_1.default.sign({ user }, jwtSecret, { expiresIn: '1h' });
+        const newAccessToken = jwt.sign({ user }, jwtSecret, { expiresIn: '1h' });
         res.status(200).json({ newAccessToken });
         return;
     }
@@ -138,8 +139,7 @@ const refresh = async (req, res) => {
         return;
     }
 };
-exports.refresh = refresh;
-const logout = (req, res, next) => {
+export const logout = (req, res, next) => {
     try {
         res.removeHeader('Authorization');
         res.clearCookie('refreshToken', {
@@ -156,4 +156,3 @@ const logout = (req, res, next) => {
         return;
     }
 };
-exports.logout = logout;

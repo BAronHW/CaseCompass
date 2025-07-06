@@ -1,24 +1,19 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.OpenAIFunctions = void 0;
-const openai_1 = __importDefault(require("openai"));
-require("dotenv/config");
+import OpenAI from "openai";
+import 'dotenv/config.js';
 /**
  *
  * TODO:
  * 1. Make the context check if the input is something it doesnt have and need to reach into the db context
  *
  */
-class OpenAIFunctions {
+export class OpenAIFunctions {
+    client;
     constructor() {
         const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
         if (!apiKey) {
             throw new Error('OpenAI API key is missing. Please set OPENAI_API_KEY or OPENAI_KEY environment variable.');
         }
-        this.client = new openai_1.default({
+        this.client = new OpenAI({
             apiKey: apiKey,
         });
     }
@@ -45,4 +40,3 @@ class OpenAIFunctions {
         }
     }
 }
-exports.OpenAIFunctions = OpenAIFunctions;

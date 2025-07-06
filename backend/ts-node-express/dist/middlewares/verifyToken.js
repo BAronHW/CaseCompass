@@ -1,14 +1,7 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyToken = void 0;
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-require("dotenv/config");
-const verifyToken = (req, res, next) => {
+import jwt from "jsonwebtoken";
+import 'dotenv/config.js';
+export const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
-    console.log(authHeader);
     if (!authHeader || authHeader == undefined) {
         res.json({ redirectAddr: 'http://localhost:5173/login' });
         return;
@@ -23,19 +16,19 @@ const verifyToken = (req, res, next) => {
         return;
     }
     try {
-        const decodedToken = jsonwebtoken_1.default.verify(token, jwtSecret);
+        const decodedToken = jwt.verify(token, jwtSecret);
         // @ts-ignore
         req.user = decodedToken;
         next();
     }
     catch (error) {
-        if (error instanceof jsonwebtoken_1.default.TokenExpiredError) {
+        if (error instanceof jwt.TokenExpiredError) {
             res.status(401).json({
                 message: 'Token has expired'
             });
             return;
         }
-        if (error instanceof jsonwebtoken_1.default.JsonWebTokenError) {
+        if (error instanceof jwt.JsonWebTokenError) {
             res.status(401).json({
                 message: 'Invalid token',
                 redirect_addr: '/login'
@@ -49,4 +42,3 @@ const verifyToken = (req, res, next) => {
         }
     }
 };
-exports.verifyToken = verifyToken;

@@ -1,46 +1,10 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadToS3 = void 0;
-const client_s3_1 = require("@aws-sdk/client-s3");
-const crypto = __importStar(require("crypto"));
-const s3Context_1 = require("../lib/s3Context");
-const prismaContext_1 = require("../lib/prismaContext");
-const chunkPDF_1 = require("./chunkPDF");
-const genai_1 = require("@google/genai");
-const uploadToS3 = async (jobData) => {
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import * as crypto from 'crypto';
+import { s3 } from "../lib/s3Context.js";
+import { db } from "../lib/prismaContext.js";
+import { ChunkPDF } from "./chunkPDF.js";
+import { GoogleGenAI } from "@google/genai";
+export const uploadToS3 = async (jobData) => {
     try {
         if (!jobData.file || !jobData.uid) {
             throw new Error('Missing required fields: file and uid are required');
@@ -53,10 +17,9 @@ const uploadToS3 = async (jobData) => {
             Body: buffer,
             ContentType: "application/pdf",
         };
-        const command = new client_s3_1.PutObjectCommand(params);
-        const sentDocument = await s3Context_1.s3.send(command);
-        console.log("tstesdftesg", sentDocument);
-        const uploadedDocument = await prismaContext_1.db.document.create({
+        const command = new PutObjectCommand(params);
+        const sentDocument = await s3.send(command);
+        const uploadedDocument = await db.document.create({
             data: {
                 key: uniqueName,
                 title: jobData.name,
@@ -67,21 +30,44 @@ const uploadToS3 = async (jobData) => {
         if (sentDocument.$metadata.httpStatusCode !== 200) {
             throw new Error('unable to send to s3');
         }
-        const arrayOfChunkedDocs = await (0, chunkPDF_1.ChunkPDF)(buffer);
-        const gemini = new genai_1.GoogleGenAI({
+        const arrayOfChunkedDocs = await ChunkPDF(buffer);
+        const gemini = new GoogleGenAI({
             apiKey: process.env.GEMINI_KEY,
         });
-        const arrayOfEmbeddings = Promise.all(await arrayOfChunkedDocs.map(async (chunk) => {
-            return await gemini.models.embedContent({
-                model: 'gemini-embedding-exp-03-07',
-                contents: chunk.pageContent,
-                config: {
-                    taskType: "SEMANTIC_SIMILARITY",
-                }
-            });
+        const arrayOfEmbeddingsAndAssociatedChunks = await Promise.all(arrayOfChunkedDocs.map(async (chunk, index) => {
+            try {
+                const result = await gemini.models.embedContent({
+                    model: 'text-embedding-004',
+                    contents: [{
+                            parts: [{ text: chunk.pageContent }]
+                        }],
+                    config: {
+                        taskType: "SEMANTIC_SIMILARITY",
+                    }
+                });
+                return {
+                    text_chunk: chunk.pageContent,
+                    embedding: result.embeddings
+                };
+            }
+            catch (error) {
+                console.error(`Error generating embedding for chunk ${index}:`, error);
+                return null;
+            }
         }));
-        console.log(arrayOfEmbeddings);
-        // may have to write the SQL by hand since I dont think prisma can handle the raw vector.
+        arrayOfEmbeddingsAndAssociatedChunks.map(async (embedding) => {
+            const embeddingText = embedding.text_chunk;
+            const embeddingValues = embedding.embedding[0].values;
+            try {
+                await db.$executeRaw `
+                    INSERT INTO "documentChunks" (content, "documentId", embeddings)
+                    VALUES (${embeddingText}, ${uploadedDocument.id}, ${embeddingValues}::vector)
+                `;
+            }
+            catch (error) {
+                console.log(error);
+            }
+        });
         return {
             key: uniqueName,
             name: jobData.name,
@@ -94,4 +80,3 @@ const uploadToS3 = async (jobData) => {
         throw error;
     }
 };
-exports.uploadToS3 = uploadToS3;

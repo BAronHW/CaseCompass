@@ -1,8 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const documentController_1 = require("../controllers/documentController");
-const verifyToken_1 = require("../middlewares/verifyToken");
-const router = (0, express_1.Router)();
-router.post('/createDocument', verifyToken_1.verifyToken, documentController_1.uploadDocument);
-exports.default = router;
+import { Router } from 'express';
+import { getAllDocuments, getDocumentById, uploadDocument } from '../controllers/documentController.js';
+import { verifyToken } from '../middlewares/verifyToken.js';
+const router = Router();
+router.post('/createDocument', verifyToken, uploadDocument);
+router.get('/', verifyToken, getAllDocuments);
+router.get('/:documentId', verifyToken, getDocumentById);
+export default router;
