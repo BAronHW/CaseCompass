@@ -50,6 +50,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 /**
  * move this to a seperate file for better readability.
  */
+
 io.on('connection', (socket) => {
 
     const userId = socket.data?.userId || socket.handshake.query.userId;
@@ -172,7 +173,7 @@ io.on('connection', (socket) => {
           }
       });
 
-      const relaventChunks = db.$queryRaw`SELECT * FROM "documentChunks" ORDER BY ${messageBodyEmbedding.embeddings?.toString()} LIMIT 1`;
+      const relaventChunks = db.$queryRaw`SELECT * FROM "documentChunks" ORDER BY ${messageBodyEmbedding.embeddings} LIMIT 1`;
 
       const generateLlmmResponse = async (messageBody: string): Promise<GenerateContentResponse> => {
           const response = await genAI.models.generateContent({

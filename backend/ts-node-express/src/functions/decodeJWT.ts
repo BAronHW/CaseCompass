@@ -12,27 +12,23 @@ interface JWTPayload {
 }
 
 export function decodeJWT(jwtString: string): JWTPayload {
-  try {
-    if (!jwtString) {
-      throw new Error('No token provided');
+    try {
+        const token = jwtString && jwtString.split(' ')[1];
+        const secret = process.env.JWT_SECRET;
+
+        if (!token) {
+            throw new Error('No token provided');
+        }
+
+        if (!secret) {
+            throw new Error('JWT_SECRET environment variable is not set');
+        }
+
+        const verifiedToken = jwt.verify(token, secret) as JWTPayload;
+        return verifiedToken;
+
+    } catch (error) {
+        console.error('JWT decode error:', error);
+        throw error;
     }
-
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      throw new Error('JWT_SECRET environment variable is not set');
-    }
-
-    // Check if token has Bearer prefix and remove it
-    const token = jwtString.startsWith('Authorization ')
-      ? jwtString.substring(14)
-      : jwtString;
-
-    console.log(token, 'here is the token');
-    console.log(secret, 'here is the secret')
-    const verifiedToken = jwt.verify(token, secret) as JWTPayload;
-    return verifiedToken;
-  } catch (error) {
-    console.error('JWT decode error:', error);
-    throw error;
-  }
 }
