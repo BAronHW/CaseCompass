@@ -156,6 +156,7 @@ io.on('connection', (socket) => {
         newMessage: newMessage
       })
 
+      
 
       if (!enableRag){
         const generateLlmmResponse = async (body: string): Promise<GenerateContentResponse> => {
@@ -183,7 +184,42 @@ io.on('connection', (socket) => {
         })
       }
 
-      // enable the rag search functionality here
+      const messageBodyEmbedding = await genAI.models.embedContent({
+          model: 'text-embedding-004',
+          contents: [{
+              parts: [{ text: messageBody }]
+          }],
+          config: {
+              taskType: "SEMANTIC_SIMILARITY",
+          }
+      });
+
+      const relaventChunks = db.$queryRaw`SELECT * FROM "documentChunks" ORDER BY ${messageBodyEmbedding.embeddings?.toString()} LIMIT 1`;
+
+      const generateLlmmResponse = async (messageBody: string): Promise<GenerateContentResponse> => {
+          const response = await genAI.models.generateContent({
+            model: 'gemini-2.0-flash-001',
+            contents: `Given this user question ${messageBody} and this retrieved documentChunk ${relaventChunks}
+                       can you give an answer to the users original question which was: ${messageBody}`,
+          });
+          return response;
+      }
+
+      const llmResp = await generateLlmmResponse(messageBody);
+
+        const newLlmResponse = await db.message.create({
+          data: {
+            chatId: chatRoomId,
+            role: 'llm',
+            body: llmResp.text,
+            isHuman: false
+          }
+        })
+
+        socket.to(roomId).emit('new-llm-response', {
+          message: 'New Llm Message sent successfully',
+          newLlmMessage: newLlmResponse
+        })
 
     } catch (error) {
       console.log('error with sending message', error)
