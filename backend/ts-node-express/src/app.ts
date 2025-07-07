@@ -46,16 +46,9 @@ app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-//need to use middlware to validate this
-/**
- * need to set the current chatRoomId in the socket
- * 1. pass the current JWT to the connect-to-chat-room as data
- * 2. authenticate the JWT to see if valid
- * 3. if valid allow the user to 
- */
 
 /**
- * 
+ * move this to a seperate file for better readability.
  */
 io.on('connection', (socket) => {
 
@@ -66,13 +59,6 @@ io.on('connection', (socket) => {
     try {
 
       let chatRoom;
-      // console.log(JWT, 'jwt here')
-      // const isUserAuth = decodeJWT(JWT);
-      
-
-      // if (!isUserAuth) {
-      //   throw new Error('unable to authenticate JWT in connect to chat room')
-      // }
 
       chatRoom = await db.chat.findUnique({
         where: {
@@ -101,14 +87,6 @@ io.on('connection', (socket) => {
       console.log('error with connect-tochat-room', error)
     }
   })
-
-  /**
-   * {
-    "chatRoomId": "chat:1",
-    "messageBody": "test here"
-}
-   */
-
 
   socket.on('send-message', async ({ messageBody, enableRag }) => {
     try {
