@@ -1,0 +1,24 @@
+export const determineIfQuestion = (inputString: string): boolean | undefined => {
+    try {
+        const questionThreshold: number = 20;
+        let currentThresholdValue: number = 0;
+        const lowerCaseInputString = inputString.toLowerCase();
+        const arrayOfWords = lowerCaseInputString.split(" ");
+        let doesSentenceContainQuestionWord = false;
+        const questionWords = ['who', 'what', 'when', 'where', 'why', '?'];
+
+        for (const word of arrayOfWords) {
+            if (questionWords.includes(word)) {
+                doesSentenceContainQuestionWord = true;
+                currentThresholdValue += 5;
+                return true;
+            }
+        }
+
+        return false;
+
+    } catch (error) {
+        console.log('unable to run question determination module', error)
+        return undefined
+    }
+}

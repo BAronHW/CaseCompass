@@ -93,7 +93,7 @@ io.on('connection', (socket) => {
         });
       } else {
         socket.emit('chat-created', {
-          error: 'unabel to join chatroom'
+          error: 'unable to join chatroom'
         });
       }
 
@@ -110,7 +110,7 @@ io.on('connection', (socket) => {
    */
 
 
-  socket.on('send-message', async ({ messageBody }) => {
+  socket.on('send-message', async ({ messageBody, enableRag }) => {
     try {
       console.log('here');
       const roomId = socket.data.currentRoomId;
@@ -151,34 +151,39 @@ io.on('connection', (socket) => {
         console.log('error creating new message in the database');
       }
 
-      socket.to(`chat:${roomId}`).emit('new-human-message', {
+      socket.to(roomId).emit('new-human-message', {
         message: 'New message sent successfully',
         newMessage: newMessage
       })
 
-      const generateLlmmResponse = async (body: string): Promise<GenerateContentResponse> => {
-        const response = await genAI.models.generateContent({
-          model: 'gemini-2.0-flash-001',
-          contents: body,
-        });
-        return response;
+
+      if (!enableRag){
+        const generateLlmmResponse = async (body: string): Promise<GenerateContentResponse> => {
+          const response = await genAI.models.generateContent({
+            model: 'gemini-2.0-flash-001',
+            contents: body,
+          });
+          return response;
+        }
+
+        const llmResp = await generateLlmmResponse(messageBody);
+
+        const newLlmResponse = await db.message.create({
+          data: {
+            chatId: chatRoomId,
+            role: 'llm',
+            body: llmResp.text,
+            isHuman: false
+          }
+        })
+
+        socket.to(roomId).emit('new-llm-response', {
+          message: 'New Llm Message sent successfully',
+          newLlmMessage: newLlmResponse
+        })
       }
 
-      const llmResp = await generateLlmmResponse(messageBody);
-
-      const newLlmResponse = await db.message.create({
-        data: {
-          chatId: chatRoomId,
-          role: 'llm',
-          body: llmResp.text,
-          isHuman: false
-        }
-      })
-
-      socket.to(chatRoomId).emit('new-llm-response', {
-        message: 'New Llm Message sent successfully',
-        newLlmMessage: newLlmResponse
-      })
+      // enable the rag search functionality here
 
     } catch (error) {
       console.log('error with sending message', error)
