@@ -1,4 +1,19 @@
+import { useState } from "react"
+import { io } from "socket.io-client";
+
 export default function ChatPage() {
+
+  const messages = useState([]);
+  const socket = io('ws://localhost:8000', {
+    reconnectionAttempts: 3,
+    reconnectionDelay: 10000
+  });
+
+  const sendMessage = async () => {
+    socket.on("connect", () => {
+      console.log('connected to socket.io')
+    })
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
