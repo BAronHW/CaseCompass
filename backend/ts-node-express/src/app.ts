@@ -11,9 +11,9 @@ import http from 'http'
 import { Server } from 'socket.io';
 import { db } from './lib/prismaContext.js';
 import { GenerateContentResponse, GoogleGenAI } from "@google/genai";
-import { decodeJWT } from './functions/decodeJWT.js';
 import { DocumentChunk } from './interfaces/DocumentChunk.js';
 
+// TODO: create a more sophisticated rag system do research
 const app = express();
 const server = http.createServer(app)
 const io = new Server(server, {
@@ -180,13 +180,14 @@ io.on('connection', (socket) => {
         throw new Error('Invalid embedding format');
       }
 
-      // need to sanitize this 
-      const relevantChunks = await db.$queryRawUnsafe<DocumentChunk[]>(`
-      SELECT id, content
-      FROM "documentChunks"
-      ORDER BY "embeddings" <-> ARRAY[${embeddingArray.join(',')}]::vector
-      LIMIT 1;
-      `);
+      const formattedVector = `[${embeddingArray.join(',')}]`;
+
+      const relevantChunks = await db.$queryRaw<DocumentChunk[]>`
+        SELECT id, content
+        FROM "documentChunks"
+        ORDER BY "embeddings" <-> ${formattedVector}::vector
+        LIMIT 1;
+      `;
 
       const generateLlmmResponse = async (messageBody: string): Promise<GenerateContentResponse> => {
           const response = await genAI.models.generateContent({
