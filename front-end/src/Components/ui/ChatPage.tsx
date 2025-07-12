@@ -9,10 +9,8 @@ export default function ChatPage() {
     reconnectionDelay: 10000
   });
 
-  const sendMessage = async () => {
-    socket.on("connect", () => {
-      console.log('connected to socket.io')
-    })
+  const connectToSocket = async () => {
+    socket.connect();
   }
 
   return (

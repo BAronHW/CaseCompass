@@ -12,6 +12,7 @@ import { Server } from 'socket.io';
 import { db } from './lib/prismaContext.js';
 import { GenerateContentResponse, GoogleGenAI } from "@google/genai";
 import { decodeJWT } from './functions/decodeJWT.js';
+import { DocumentChunk } from './interfaces/DocumentChunk.js';
 
 const app = express();
 const server = http.createServer(app)
@@ -173,12 +174,24 @@ io.on('connection', (socket) => {
           }
       });
 
-      const relaventChunks = db.$queryRaw`SELECT * FROM "documentChunks" ORDER BY ${messageBodyEmbedding.embeddings} LIMIT 1`;
+      const embeddingArray = messageBodyEmbedding.embeddings?.[0]?.values;
+
+      if (!embeddingArray || !Array.isArray(embeddingArray)) {
+        throw new Error('Invalid embedding format');
+      }
+
+      // need to sanitize this 
+      const relevantChunks = await db.$queryRawUnsafe<DocumentChunk[]>(`
+      SELECT id, content
+      FROM "documentChunks"
+      ORDER BY "embeddings" <-> ARRAY[${embeddingArray.join(',')}]::vector
+      LIMIT 1;
+      `);
 
       const generateLlmmResponse = async (messageBody: string): Promise<GenerateContentResponse> => {
           const response = await genAI.models.generateContent({
             model: 'gemini-2.0-flash-001',
-            contents: `Given this user question ${messageBody} and this retrieved documentChunk ${relaventChunks}
+            contents: `Given this user question ${messageBody} and this retrieved documentChunk ${relevantChunks[0].content}
                        can you give an answer to the users original question which was: ${messageBody}`,
           });
           return response;
