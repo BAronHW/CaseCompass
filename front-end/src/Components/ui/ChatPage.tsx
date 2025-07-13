@@ -28,8 +28,10 @@ export default function ChatPage() {
 
   useEffect(() => {
   connectToSocket();
-
-  socket.emit('connect-to-chat-room');
+  const token = sessionStorage.getItem('Authorization');
+  socket.emit('connect-to-chat-room', {
+    token
+  });
 
   const handleChatCreated = ({ message, chatRoom }) => {
     setChatRoom(chatRoom);
@@ -43,6 +45,7 @@ export default function ChatPage() {
 
   const handleNewLlmResponse = ({ message, newLlmMessage }) => {
     setMessages(prevMessages => [...prevMessages, newLlmMessage]);
+    console.log(newLlmMessage, 'here is llm')
   };
 
   socket.on('chat-created', handleChatCreated);

@@ -13,7 +13,7 @@ interface JWTPayload {
 
 export function decodeJWT(jwtString: string): JWTPayload {
     try {
-        const token = jwtString && jwtString.split(' ')[1];
+        const token = jwtString;
         const secret = process.env.JWT_SECRET;
 
         if (!token) {

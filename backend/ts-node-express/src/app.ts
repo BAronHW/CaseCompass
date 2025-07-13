@@ -58,13 +58,12 @@ io.on('connection', (socket) => {
     const userId = socket.data?.userId || socket.handshake.query.userId;
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
 
-  socket.on('connect-to-chat-room', async () => {
+  socket.on('connect-to-chat-room', async ({ token }) => {
     try {
-
+      console.log('here i am')
       let chatRoom;
-
-      const jwtToken = sessionStorage.getItem('Authorization');
-      const decodedJWT = decodeJWT(jwtToken!);
+      console.log('jwt token here' ,token)
+      const decodedJWT = await decodeJWT(token!);
 
       const userId = decodedJWT.userForToken.id;
 
