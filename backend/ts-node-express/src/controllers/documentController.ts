@@ -7,6 +7,7 @@ export const getAllDocuments = async (req: Request, res: Response): Promise<void
     try{
         const authToken = req.headers.authorization;
 
+        console.log(authToken, 'authtoken');
         if (!authToken) {
             res.status(401).json({ error: 'Authorization header is required' });
             return;

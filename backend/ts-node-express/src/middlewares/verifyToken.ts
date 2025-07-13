@@ -10,9 +10,7 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         return 
     }
     
-    const token = authHeader.startsWith('Bearer ') 
-        ? authHeader.substring(7).trim()
-        : authHeader.trim();
+    const token = authHeader;
 
     const jwtSecret = process.env.JWT_SECRET;
     

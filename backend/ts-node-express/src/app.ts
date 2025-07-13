@@ -62,7 +62,6 @@ io.on('connection', (socket) => {
     try {
       console.log('here i am')
       let chatRoom;
-      console.log('jwt token here' ,token)
       const decodedJWT = await decodeJWT(token!);
 
       const userId = decodedJWT.userForToken.id;

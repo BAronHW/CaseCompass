@@ -34,7 +34,7 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, bod
 
         const headerWithToken = {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`,
+            "Authorization": `${accessToken}`,
         }
 
         const headerNoToken = {
