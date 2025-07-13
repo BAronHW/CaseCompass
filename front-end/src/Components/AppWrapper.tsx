@@ -6,6 +6,7 @@ import LoginPage from "./LoginPage";
 import RegisterPage from "./RegisterPage";
 import ChatPage from "./ui/ChatPage";
 import DocumentPage from "./ui/DocumentPage";
+import AuthProvider from "../context/AuthContext";
 
 export default function AppWrapper() {
     const location = useLocation();
@@ -14,6 +15,7 @@ export default function AppWrapper() {
   return (
     <>
         {showSidebar ? (
+        <AuthProvider>
         <Sidebar>
           <Routes>
             <Route path="/upload" element={<DocumentUploader />}/> 
@@ -21,6 +23,7 @@ export default function AppWrapper() {
             <Route path="/documents" element={<DocumentPage/>}/>
           </Routes>
         </Sidebar>
+        </AuthProvider>
       ) : (
         <Routes>
           <Route path="/" element={<LandingPage />}/>

@@ -71,6 +71,9 @@ io.on('connection', (socket) => {
       if (chatRoom) {
         const roomId = `chat:${chatRoom.id}`;
         socket.join(roomId);
+        socket.emit('chat-joined', {
+          chatRoomId: chatRoom
+        })
         console.log('joined room', chatRoom.id)
         socket.data.currentRoomId = roomId;
         socket.data.currentUserId = userId;

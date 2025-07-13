@@ -1,21 +1,19 @@
-import { createContext, useState } from "react";
-import { authContextProps } from "../interfacesEnumsAndTypes/interfaces";
+// need to flesh this out
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-  export const AuthContext = createContext<authContextProps | undefined>(undefined);
+const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
 
-  export const AuthProvider  = ({ children }) => {
-    const [accessToken, setAccessToken] = useState<string>('');
+  useEffect(() => {
+    const token = sessionStorage.getItem("Authorization");
 
-    const authValue = {
-      accessToken,
-      setAccessToken
+    if (!token) {
+      navigate("/login");
     }
+  }, [navigate]);
 
-    return(
-      <AuthContext.Provider value={authValue}>
-        {children}
-      </AuthContext.Provider>
-    )
+  return <>{children}</>;
+};
 
-  }
-
+export default AuthProvider;

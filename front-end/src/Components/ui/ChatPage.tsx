@@ -1,17 +1,26 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { io } from "socket.io-client";
 
 export default function ChatPage() {
 
-  const messages = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [chatRoom, setChatRoom] = useState('');
   const socket = io('ws://localhost:8000', {
     reconnectionAttempts: 3,
     reconnectionDelay: 10000
   });
 
   const connectToSocket = async () => {
-    socket.connect();
+    if (!socket.connected) {
+      socket.connect();
+    }
   }
+
+  useEffect(() => {
+    socket.on('connect-to-chat-room', (res) => {
+      setChatRoom(res)
+    })
+  }, [])
 
   return (
     <div className="min-h-screen flex flex-col">

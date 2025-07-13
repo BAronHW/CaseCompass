@@ -1,11 +1,9 @@
 import { useFormik } from 'formik';
 import { useNavigate } from 'react-router';
 import * as Yup from 'yup';
-import useAuth from '../Hooks/useAuth';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const auth = useAuth();
   const validationSchema = Yup.object({
     email: Yup.string()
       .required('Username is required'),
@@ -33,7 +31,6 @@ const LoginPage = () => {
           const data = await resp.json();
           const { user } = data;
           sessionStorage.setItem('Authorization', user.accessToken);
-          auth.setAccessToken(user.accessToken);
           navigate('/upload')
         }
 
