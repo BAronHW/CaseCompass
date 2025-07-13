@@ -3,8 +3,10 @@ import { io } from "socket.io-client";
 
 export default function ChatPage() {
 
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<string[]>([]);
+  const [unsentMessage, setUnsentMessage] = useState('');
   const [chatRoom, setChatRoom] = useState('');
+  const [enableRag, setEnableRag] = useState(false);
   const socket = io('ws://localhost:8000', {
     reconnectionAttempts: 3,
     reconnectionDelay: 10000
@@ -16,11 +18,44 @@ export default function ChatPage() {
     }
   }
 
-  useEffect(() => {
-    socket.on('connect-to-chat-room', (res) => {
-      setChatRoom(res)
+  const sendMessage = async (messageBody: string) => {
+    console.log('here')
+    socket.emit('send-message', {
+      messageBody,
+      enableRag: enableRag
     })
-  }, [])
+  }
+
+  useEffect(() => {
+  connectToSocket();
+
+  socket.emit('connect-to-chat-room');
+
+  const handleChatCreated = ({ message, chatRoom }) => {
+    setChatRoom(chatRoom);
+    console.log(message, 'chat-created message');
+  };
+
+  const handleNewHumanMessage = ({ message, newMessage }) => {
+    setMessages(prevMessages => [...prevMessages, newMessage]);
+    console.log('newhuman message', newMessage);
+  };
+
+  const handleNewLlmResponse = ({ message, newLlmMessage }) => {
+    setMessages(prevMessages => [...prevMessages, newLlmMessage]);
+  };
+
+  socket.on('chat-created', handleChatCreated);
+  socket.on('new-human-message', handleNewHumanMessage);
+  socket.on('new-llm-response', handleNewLlmResponse);
+
+  return () => {
+    socket.off('chat-created', handleChatCreated);
+    socket.off('new-human-message', handleNewHumanMessage);
+    socket.off('new-llm-response', handleNewLlmResponse);
+  };
+}, []);
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -42,9 +77,11 @@ export default function ChatPage() {
             type="text" 
             placeholder="Chat with case compass"
             className="flex-1 bg-transparent focus:outline-none placeholder-gray-500"
+            value={unsentMessage}
+            onChange={(e) => setUnsentMessage(e.target.value)}
           />
           
-          <button className="px-4 py-1.5 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors">
+          <button onClick={() => sendMessage(unsentMessage)} className="px-4 py-1.5 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors">
             Send
           </button>
         </div>

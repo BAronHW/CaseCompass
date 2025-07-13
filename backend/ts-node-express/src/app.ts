@@ -12,7 +12,8 @@ import { Server } from 'socket.io';
 import { db } from './lib/prismaContext.js';
 import { GenerateContentResponse, GoogleGenAI } from "@google/genai";
 import { DocumentChunk } from './interfaces/DocumentChunk.js';
-
+import jwt from 'jsonwebtoken';
+import { decodeJWT } from './functions/decodeJWT.js';
 // TODO: create a more sophisticated rag system do research
 const app = express();
 const server = http.createServer(app)
@@ -57,10 +58,15 @@ io.on('connection', (socket) => {
     const userId = socket.data?.userId || socket.handshake.query.userId;
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
 
-  socket.on('connect-to-chat-room', async ({ userId }) => {
+  socket.on('connect-to-chat-room', async () => {
     try {
 
       let chatRoom;
+
+      const jwtToken = sessionStorage.getItem('Authorization');
+      const decodedJWT = decodeJWT(jwtToken!);
+
+      const userId = decodedJWT.userForToken.id;
 
       chatRoom = await db.chat.findUnique({
         where: {
@@ -80,7 +86,7 @@ io.on('connection', (socket) => {
 
         socket.emit('chat-created', {
           message: 'Chat room created successfully',
-          chatRoom: chatRoom
+          chatRoom: roomId
         });
       } else {
         socket.emit('chat-created', {
