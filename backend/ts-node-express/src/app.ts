@@ -50,7 +50,9 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 
 /**
+ * TODO: 
  * move this to a seperate file for better readability.
+ * Dockerize the entire application
  */
 
 io.on('connection', (socket) => {
