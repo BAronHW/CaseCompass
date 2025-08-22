@@ -12,7 +12,6 @@ import { Server } from 'socket.io';
 import { db } from './lib/prismaContext.js';
 import { GenerateContentResponse, GoogleGenAI } from "@google/genai";
 import { DocumentChunk } from './interfaces/DocumentChunk.js';
-import jwt from 'jsonwebtoken';
 import { decodeJWT } from './functions/decodeJWT.js';
 // TODO: create a more sophisticated rag system do research
 const app = express();
@@ -56,8 +55,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
  */
 
 io.on('connection', (socket) => {
-
-    const userId = socket.data?.userId || socket.handshake.query.userId;
+  
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
 
   socket.on('connect-to-chat-room', async ({ token }) => {
@@ -73,6 +71,8 @@ io.on('connection', (socket) => {
           userId: userId
         }
       })
+
+      console.log(chatRoom, 'here is the chatroom')
 
       if (chatRoom) {
         const roomId = `chat:${chatRoom.id}`;
@@ -140,7 +140,7 @@ io.on('connection', (socket) => {
         console.log('error creating new message in the database');
       }
 
-      socket.to(roomId).emit('new-human-message', {
+      io.to(roomId).emit('new-human-message', {
         message: 'New message sent successfully',
         newMessage: newMessage
       })
@@ -167,10 +167,12 @@ io.on('connection', (socket) => {
           }
         })
 
-        socket.to(roomId).emit('new-llm-response', {
+        io.to(roomId).emit('new-llm-response', {
           message: 'New Llm Message sent successfully',
           newLlmMessage: newLlmResponse
         })
+        
+        return;
       }
 
       const messageBodyEmbedding = await genAI.models.embedContent({
@@ -218,10 +220,12 @@ io.on('connection', (socket) => {
           }
         })
 
-        socket.to(roomId).emit('new-llm-response', {
+        io.to(roomId).emit('new-llm-response', {
           message: 'New Llm Message sent successfully',
           newLlmMessage: newLlmResponse
         })
+
+      return;
 
     } catch (error) {
       console.log('error with sending message', error)
