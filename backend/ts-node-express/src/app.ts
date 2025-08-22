@@ -58,9 +58,9 @@ io.on('connection', (socket) => {
   
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
 
+  // when client connects to chat room
   socket.on('connect-to-chat-room', async ({ token }) => {
     try {
-      console.log('here i am')
       let chatRoom;
       const decodedJWT = await decodeJWT(token!);
 
@@ -72,15 +72,12 @@ io.on('connection', (socket) => {
         }
       })
 
-      console.log(chatRoom, 'here is the chatroom')
-
       if (chatRoom) {
         const roomId = `chat:${chatRoom.id}`;
         socket.join(roomId);
         socket.emit('chat-joined', {
           chatRoomId: chatRoom
         })
-        console.log('joined room', chatRoom.id)
         socket.data.currentRoomId = roomId;
         socket.data.currentUserId = userId;
 
@@ -99,22 +96,17 @@ io.on('connection', (socket) => {
     }
   })
 
+  // when client sends a message
   socket.on('send-message', async ({ messageBody, enableRag }) => {
     try {
-      console.log('here');
       const roomId = socket.data.currentRoomId;
-
-      console.log(roomId, 'this is the roomId')
       
       if (!roomId) {
-        console.log('no room or chatroomid')
         socket.emit('error', {
           error: 'You must join a chat room first'
         });
         return;
       }
-
-      console.log('roomId here', roomId)
 
       const chatRoomId = Number(roomId.slice(5))
       const chatRoom = await db.chat.findUnique({
@@ -144,8 +136,6 @@ io.on('connection', (socket) => {
         message: 'New message sent successfully',
         newMessage: newMessage
       })
-
-      
 
       if (!enableRag){
         const generateLlmmResponse = async (body: string): Promise<GenerateContentResponse> => {
