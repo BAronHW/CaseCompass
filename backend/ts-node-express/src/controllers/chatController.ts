@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { decodeJWT } from "../functions/decodeJWT.js";
 import { db } from "../lib/prismaContext.js";
 import { determineIfQuestion } from "../lib/questionDetermine.js";
+import { HumanMessage } from "@langchain/core/messages";
 
 // TODO: use websockets
 
@@ -95,7 +96,8 @@ export const pushToChat = async (req: Request, res: Response) => {
             const chatText = await db.message.create({
                 data: {
                     chatId: foundChatId,
-                    body: body
+                    body: body,
+                    role: 'user' 
                 }
             })
 

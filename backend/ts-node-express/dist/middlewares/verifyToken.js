@@ -6,9 +6,7 @@ export const verifyToken = (req, res, next) => {
         res.json({ redirectAddr: 'http://localhost:5173/login' });
         return;
     }
-    const token = authHeader.startsWith('Bearer ')
-        ? authHeader.substring(7).trim()
-        : authHeader.trim();
+    const token = authHeader;
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
         console.error('JWT_SECRET is not set');

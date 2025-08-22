@@ -4,6 +4,7 @@ import { db } from "../lib/prismaContext.js";
 export const getAllDocuments = async (req, res) => {
     try {
         const authToken = req.headers.authorization;
+        console.log(authToken, 'authtoken');
         if (!authToken) {
             res.status(401).json({ error: 'Authorization header is required' });
             return;

@@ -6,7 +6,18 @@
   "scripts": {
     "test": "jest",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'tsx' src/server.ts",
-    "lint": "eslint 'src/**/*.ts'"
+    "build": "tsc",
+    "lint": "eslint 'src/**/*.ts'",
+    "start": "node dist/server.js",
+    "docker:build": "docker build -t my-ts-app .",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:restart": "docker-compose restart app",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio"
   },
   "keywords": [],
   "author": "",

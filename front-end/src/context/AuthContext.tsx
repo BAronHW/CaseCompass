@@ -1,4 +1,5 @@
 // need to flesh this out
+// need to stop storing the token in session storage and put it into cookies
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 

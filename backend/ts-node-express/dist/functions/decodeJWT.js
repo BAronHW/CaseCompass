@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import 'dotenv/config.js';
 export function decodeJWT(jwtString) {
     try {
-        const token = jwtString && jwtString.split(' ')[1];
+        const token = jwtString;
         const secret = process.env.JWT_SECRET;
         if (!token) {
             throw new Error('No token provided');

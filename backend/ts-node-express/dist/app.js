@@ -11,6 +11,8 @@ import http from 'http';
 import { Server } from 'socket.io';
 import { db } from './lib/prismaContext.js';
 import { GoogleGenAI } from "@google/genai";
+import { decodeJWT } from './functions/decodeJWT.js';
+// TODO: create a more sophisticated rag system do research
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -41,42 +43,58 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-//need to use middlware to validate this
+/**
+ * TODO:
+ * move this to a seperate file for better readability.
+ * Dockerize the entire application
+ */
 io.on('connection', (socket) => {
-    const userId = socket.data?.userId || socket.handshake.query.userId;
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
-    socket.on('connect-to-chat-room', async ({ userId, action }) => {
+    // when client connects to chat room
+    socket.on('connect-to-chat-room', async ({ token }) => {
         try {
             let chatRoom;
-            if (action === 'create') {
-                chatRoom = await db.chat.create({
-                    data: {
-                        userId: userId
-                    }
-                });
-            }
-            else if (action === 'join') {
-                chatRoom = await db.chat.findUnique({
-                    where: {
-                        userId: userId
-                    }
-                });
-                if (chatRoom) {
-                    socket.join(chatRoom.id.toString());
-                    console.log('joined room', chatRoom.id);
+            const decodedJWT = await decodeJWT(token);
+            const userId = decodedJWT.userForToken.id;
+            chatRoom = await db.chat.findUnique({
+                where: {
+                    userId: userId
                 }
-            }
-            socket.emit('chat-created', {
-                message: 'Chat room created successfully',
-                chatRoom: chatRoom
             });
+            if (chatRoom) {
+                const roomId = `chat:${chatRoom.id}`;
+                socket.join(roomId);
+                socket.emit('chat-joined', {
+                    chatRoomId: chatRoom
+                });
+                socket.data.currentRoomId = roomId;
+                socket.data.currentUserId = userId;
+                socket.emit('chat-created', {
+                    message: 'Chat room created successfully',
+                    chatRoom: roomId
+                });
+            }
+            else {
+                socket.emit('chat-created', {
+                    error: 'unable to join chatroom'
+                });
+            }
         }
         catch (error) {
             console.log('error with connect-tochat-room', error);
         }
     });
-    socket.on('send-message', async ({ chatRoomId, messageBody }) => {
+    // when client sends a message
+    socket.on('send-message', async ({ messageBody, enableRag }) => {
         try {
+            const roomId = socket.data.currentRoomId;
+            if (!roomId) {
+                socket.emit('error', {
+                    error: 'You must join a chat room first'
+                });
+                return;
+            }
+            const chatRoomId = Number(roomId.slice(5));
             const chatRoom = await db.chat.findUnique({
                 where: {
                     id: chatRoomId
@@ -96,14 +114,58 @@ io.on('connection', (socket) => {
             if (!newMessage) {
                 console.log('error creating new message in the database');
             }
-            socket.emit('new-human-message', {
+            io.to(roomId).emit('new-human-message', {
                 message: 'New message sent successfully',
                 newMessage: newMessage
             });
-            const generateLlmmResponse = async (body) => {
+            if (!enableRag) {
+                const generateLlmmResponse = async (body) => {
+                    const response = await genAI.models.generateContent({
+                        model: 'gemini-2.0-flash-001',
+                        contents: body,
+                    });
+                    return response;
+                };
+                const llmResp = await generateLlmmResponse(messageBody);
+                const newLlmResponse = await db.message.create({
+                    data: {
+                        chatId: chatRoomId,
+                        role: 'llm',
+                        body: llmResp.text,
+                        isHuman: false
+                    }
+                });
+                io.to(roomId).emit('new-llm-response', {
+                    message: 'New Llm Message sent successfully',
+                    newLlmMessage: newLlmResponse
+                });
+                return;
+            }
+            const messageBodyEmbedding = await genAI.models.embedContent({
+                model: 'text-embedding-004',
+                contents: [{
+                        parts: [{ text: messageBody }]
+                    }],
+                config: {
+                    taskType: "SEMANTIC_SIMILARITY",
+                }
+            });
+            const embeddingArray = messageBodyEmbedding.embeddings?.[0]?.values;
+            if (!embeddingArray || !Array.isArray(embeddingArray)) {
+                throw new Error('Invalid embedding format');
+            }
+            const formattedVector = `[${embeddingArray.join(',')}]`;
+            const relevantChunks = await db.$queryRaw `
+        SELECT id, content
+        FROM "documentChunks"
+        ORDER BY "embeddings" <-> ${formattedVector}::vector
+        LIMIT 1;
+      `;
+            const generateLlmmResponse = async (messageBody) => {
                 const response = await genAI.models.generateContent({
                     model: 'gemini-2.0-flash-001',
-                    contents: messageBody,
+                    contents: `Given this user question ${messageBody} and this retrieved documentChunk ${relevantChunks[0].content}
+                       can you give an answer to the users original question which was: ${messageBody}`,
                 });
                 return response;
             };
@@ -116,13 +178,14 @@ io.on('connection', (socket) => {
                     isHuman: false
                 }
             });
-            socket.emit('new-llm-response', {
+            io.to(roomId).emit('new-llm-response', {
                 message: 'New Llm Message sent successfully',
                 newLlmMessage: newLlmResponse
             });
+            return;
         }
         catch (error) {
-            console.log('error with sednign message', error);
+            console.log('error with sending message', error);
         }
     });
     socket.emit('welcome', {

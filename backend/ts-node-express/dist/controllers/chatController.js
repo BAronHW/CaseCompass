@@ -72,7 +72,8 @@ export const pushToChat = async (req, res) => {
             const chatText = await db.message.create({
                 data: {
                     chatId: foundChatId,
-                    body: body
+                    body: body,
+                    role: 'user'
                 }
             });
             if (!chatText) {
