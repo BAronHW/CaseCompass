@@ -4,12 +4,12 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypt from 'crypto';
 import 'dotenv/config.js';
-import { error } from "console";
 
 /**
  * TODO:
  * 1. refactor to use transactions to ensure atomic mutations\
  * 2. refactor so that instead of using refresh-tokens in cookies
+ * 3. automatically classify document's uploaded
  */
 
 export const protectedRoute = (req: Request, res: Response) => {
