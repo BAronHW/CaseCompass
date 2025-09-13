@@ -26,8 +26,8 @@ export async function ChunkPDF(pdfBuffer: Buffer): Promise<Document[]> {
         const docs = await loader.load();
 
         const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize: 500, // Increased from 50 for more meaningful chunks
-            chunkOverlap: 50, // Increased from 1 for better context preservation
+            chunkSize: 1024,
+            chunkOverlap: 20,
         });
 
         const chunkedDocuments = await Promise.all(

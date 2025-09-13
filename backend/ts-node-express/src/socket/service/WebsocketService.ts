@@ -3,13 +3,13 @@ import { io } from "../../app.js";
 import { decodeJWT } from "../../functions/decodeJWT.js";
 import { DocumentChunk } from "../../interfaces/DocumentChunk.js";
 import { db } from "../../lib/prismaContext.js";
+import { chunkRetrieval } from "../../functions/chunkRetrieval.js";
 
 export function websocketService() {
     io.on('connection', (socket) => {
 
     const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
 
-    // when client connects to chat room
     socket.on('connect-to-chat-room', async ({ token }) => {
         try {
         let chatRoom;
@@ -47,7 +47,6 @@ export function websocketService() {
         }
     })
 
-    // when client sends a message
     socket.on('send-message', async ({ messageBody, enableRag }) => {
         try {
         const roomId = socket.data.currentRoomId;
@@ -116,30 +115,7 @@ export function websocketService() {
             return;
         }
 
-        const messageBodyEmbedding = await genAI.models.embedContent({
-            model: 'text-embedding-004',
-            contents: [{
-                parts: [{ text: messageBody }]
-            }],
-            config: {
-                taskType: "SEMANTIC_SIMILARITY",
-            }
-        });
-
-        const embeddingArray = messageBodyEmbedding.embeddings?.[0]?.values;
-
-        if (!embeddingArray || !Array.isArray(embeddingArray)) {
-            throw new Error('Invalid embedding format');
-        }
-
-        const formattedVector = `[${embeddingArray.join(',')}]`;
-
-        const relevantChunks = await db.$queryRaw<DocumentChunk[]>`
-            SELECT id, content
-            FROM "documentChunks"
-            ORDER BY "embeddings" <-> ${formattedVector}::vector
-            LIMIT 1;
-        `;
+        const relevantChunks = await chunkRetrieval(1, messageBody, genAI)
 
         const generateLlmmResponse = async (messageBody: string): Promise<GenerateContentResponse> => {
             const response = await genAI.models.generateContent({
