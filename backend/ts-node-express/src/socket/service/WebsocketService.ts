@@ -4,6 +4,7 @@ import { decodeJWT } from "../../functions/decodeJWT.js";
 import { DocumentChunk } from "../../interfaces/DocumentChunk.js";
 import { db } from "../../lib/prismaContext.js";
 import { chunkRetrieval } from "../../functions/chunkRetrieval.js";
+import { HydeConfig, HydeService } from "../../services/HydeService.js";
 
 export function websocketService() {
     io.on('connection', (socket) => {
@@ -115,7 +116,15 @@ export function websocketService() {
             return;
         }
 
-        const relevantChunks = await chunkRetrieval(1, messageBody, genAI)
+        const hydeConfig: HydeConfig = {
+            temperature: 0
+        }
+
+        const hydeService: HydeService = new HydeService(genAI)
+
+        const fakeDoc = await hydeService.generateHypotheticalDocument(messageBody, hydeConfig);
+
+        const relevantChunks = await chunkRetrieval(1, fakeDoc, genAI)
 
         const generateLlmmResponse = async (messageBody: string): Promise<GenerateContentResponse> => {
             const response = await genAI.models.generateContent({
@@ -145,7 +154,7 @@ export function websocketService() {
         return;
 
         } catch (error) {
-        console.log('error with sending message', error)
+            console.log('error with sending message', error)
         }
     })
 
