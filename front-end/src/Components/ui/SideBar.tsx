@@ -89,7 +89,7 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
           })}
         </ul>
         
-        <div className="pt-4 mt-auto border-t border-gray-200">
+        <div className="pt-4 mt-auto border-gray-200">
           <button
             onClick={() => logOut()}
             className="w-full flex items-center p-3 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
