@@ -182,3 +182,54 @@ export const deleteChat = async (req: Request, res: Response) => {
     
     return;
 }
+
+export const getAllChats = async (req: Request, res: Response) => {
+    try {
+        const authToken = req.headers.authorization;
+
+        if (!authToken) {
+            res.status(401).json({ error: 'Authorization header is required' });
+            return;
+        }
+
+        const decodedAuthToken = await decodeJWT(authToken);
+        
+        if (!decodedAuthToken || !decodedAuthToken.userForToken) {
+            res.status(401).json({ error: 'Invalid or expired token' });
+            return;
+        }
+
+        const userId = decodedAuthToken.userForToken.id;
+        const chat = await db.chat.findFirst({
+            where: {
+                userId: userId
+            }
+        })
+
+        const chatId = chat?.id
+
+        const messages = await db.message.findMany({
+            where: {
+                chat: {
+                    id: chatId
+                }
+            },
+            orderBy: [
+                {
+                    timestamp: "asc"
+                }
+            ]
+        })
+
+        res.status(200).json({
+            messages
+        })
+        return;
+
+    } catch (error) {
+        console.log(error);
+        throw new Error('error with getting all chats')
+    }
+    
+    return;
+}

@@ -10,6 +10,7 @@ import session from 'express-session';
 import http from 'http'
 import { Server } from 'socket.io';
 import { websocketService } from './socket/service/WebsocketService.js';
+import chatRoutes from './routes/chatRoutes.js';
 // TODO: create a more sophisticated rag system do research
 const app = express();
 const server = http.createServer(app)
@@ -53,6 +54,7 @@ websocketService();
 app.use('/api/auth', authRoutes);
 app.use('/api/', userRoutes);
 app.use('/api/documents/', documentRoutes);
+app.use('/api/chat/', chatRoutes)
 
 app.use(errorHandler);
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import { customFetch, requestTypeEnum } from "../../lib/customFetch";
 
 // create socket ONCE, outside the component
 const socket = io("ws://localhost:8000", {
@@ -51,6 +52,23 @@ export default function ChatPage() {
       socket.off("new-llm-response", handleNewLlmResponse);
     };
   }, []);
+
+   useEffect(() => {
+    const getExistingMessages = async () => {
+      try {
+        const response = await customFetch('http://localhost:8000/api/chat', requestTypeEnum.GET);
+        
+        if (response.messages && Array.isArray(response.messages)) {
+          setMessages(response.messages);
+        }
+      } catch (error) {
+        console.error('Failed to fetch existing messages:', error);
+      }
+    };
+
+    getExistingMessages();
+  }, []);
+
 
   return (
     <div className="min-h-screen flex flex-col">
