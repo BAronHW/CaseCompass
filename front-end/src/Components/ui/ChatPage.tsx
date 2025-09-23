@@ -55,21 +55,34 @@ export default function ChatPage() {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  interface ChatRoomCreateStruct {
+    message: string;
+    chatRoom: string;
+  }
+
+  interface NewHumanMessagePayload {
+    newMessage: ChatMessages;
+  }
+
+  interface NewLlmResponsePayload {
+    newLlmMessage: ChatMessages;
+  }
+
   useEffect(() => {
     if (!socket.connected) socket.connect();
     const token = sessionStorage.getItem("Authorization");
     socket.emit("connect-to-chat-room", { token });
 
-    const handleChatCreated = ({ message, chatRoom }: any) => {
+    const handleChatCreated = ({ message, chatRoom }: ChatRoomCreateStruct) => {
       setChatRoom(chatRoom);
       console.log(message, "chat-created message");
     };
 
-    const handleNewHumanMessage = ({ newMessage }: any) => {
+    const handleNewHumanMessage = ({ newMessage }: NewHumanMessagePayload) => {
       setMessages((prev) => [...prev, newMessage]);
     };
 
-    const handleNewLlmResponse = ({ newLlmMessage }: any) => {
+    const handleNewLlmResponse = ({ newLlmMessage }: NewLlmResponsePayload) => {
       setMessages((prev) => [...prev, newLlmMessage]);
     };
 
@@ -184,10 +197,6 @@ export default function ChatPage() {
                 style={{
                   height: 'auto',
                   minHeight: '24px',
-                }}
-                onInput={(e: any) => {
-                  e.target.style.height = 'auto';
-                  e.target.style.height = e.target.scrollHeight + 'px';
                 }}
               />
             </div>
