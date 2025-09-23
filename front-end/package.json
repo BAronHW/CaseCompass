@@ -10,6 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@embedpdf/core": "^1.3.0",
+    "@embedpdf/engines": "^1.3.0",
+    "@embedpdf/plugin-loader": "^1.3.0",
+    "@embedpdf/plugin-render": "^1.3.0",
+    "@embedpdf/plugin-scroll": "^1.3.0",
+    "@embedpdf/plugin-viewport": "^1.3.0",
     "@prisma/client": "^6.6.0",
     "@tailwindcss/vite": "^4.1.3",
     "formik": "^2.4.6",

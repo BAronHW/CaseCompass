@@ -11,14 +11,17 @@ export const uploadToS3 = async (jobData) => {
         }
         const buffer = Buffer.from(jobData.file, 'base64');
         const uniqueName = crypto.randomBytes(32).toString('hex');
+        const bucketName = process.env.BUCKET_NAME;
+        const bucketRegion = process.env.BUCKET_REGION;
         const params = {
-            Bucket: process.env.BUCKET_NAME,
+            Bucket: bucketName,
             Key: uniqueName,
             Body: buffer,
             ContentType: "application/pdf",
         };
         const command = new PutObjectCommand(params);
         const sentDocument = await s3.send(command);
+        const objectUrl = `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${uniqueName}`;
         const uploadedDocument = await db.document.create({
             data: {
                 key: uniqueName,

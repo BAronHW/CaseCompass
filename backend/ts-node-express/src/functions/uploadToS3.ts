@@ -1,4 +1,5 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as crypto from 'crypto';
 import { s3 } from "../lib/s3Context.js";
 import { db } from "../lib/prismaContext.js";
@@ -20,6 +21,19 @@ export interface UploadToS3Result {
     uid: string;
 }
 
+const getPreSignedUrl = async (key: string): Promise<string> => {
+    const command = new GetObjectCommand({
+        Bucket: process.env.BUCKET_NAME,
+        Key: key
+    })
+
+    const preSignedUrl = await getSignedUrl(s3,command, {
+        expiresIn: 3600
+    });
+
+    return preSignedUrl
+}
+
 export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3Result> => {
     try {
         if (!jobData.file || !jobData.uid) {
@@ -30,8 +44,10 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         
         const uniqueName = crypto.randomBytes(32).toString('hex');
         
+        const bucketName = process.env.BUCKET_NAME;
+
         const params = {
-            Bucket: process.env.BUCKET_NAME,
+            Bucket: bucketName,
             Key: uniqueName,
             Body: buffer,
             ContentType: "application/pdf",
@@ -40,12 +56,15 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         const command = new PutObjectCommand(params);
         const sentDocument = await s3.send(command);
         
+        const objectUrl = await getPreSignedUrl(uniqueName);
+
         const uploadedDocument = await db.document.create({
             data: {
                 key: uniqueName,
                 title: jobData.name,
                 size: jobData.size,
                 uid: jobData.uid,
+                url: objectUrl
             }
         });
 

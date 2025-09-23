@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { createNewChat, deleteChat, pushToChat } from "../controllers/chatController.js";
+import { createNewChat, deleteChat, getAllChats, pushToChat } from "../controllers/chatController.js";
 import { verifyToken } from "../middlewares/verifyToken.js";
 const router = Router();
-router.post('/chat/:chatId', verifyToken, pushToChat);
-router.post('/chat', verifyToken, createNewChat);
-router.delete('/chat/:chatId', verifyToken, deleteChat);
+router.post('/:chatId', verifyToken, pushToChat);
+router.post('/', verifyToken, createNewChat);
+router.delete('/:chatId', verifyToken, deleteChat);
+router.get('/', verifyToken, getAllChats);
 export default router;

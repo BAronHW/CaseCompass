@@ -16,6 +16,7 @@ model Document {
   uid              String
   content          String?           @default("")
   title            String?           @default("")
+  url              String            @default("")
   user             User              @relation(fields: [uid], references: [uid])
   documentChunks   documentChunks[]
   documentComments documentComments?
