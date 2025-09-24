@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { customFetch, requestTypeEnum } from "../../lib/customFetch";
-import { PDFViewer } from "./PDFViewer"; // Adjust import path as needed
+import { PDFViewer } from "./PDFViewer";
 
 interface Document {
   id: number;
@@ -9,7 +9,7 @@ interface Document {
   title: string;
   content: string;
   uid: string;
-  url?: string; // Added URL field for S3 URL
+  url?: string;
   tags?: { name: string }[];
 }
 
