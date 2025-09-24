@@ -14,21 +14,15 @@ model Document {
   key              String            @unique
   size             Int
   uid              String
+  tagId            String
   content          String?           @default("")
   title            String?           @default("")
   url              String            @default("")
   user             User              @relation(fields: [uid], references: [uid])
   documentChunks   documentChunks[]
   documentComments documentComments?
-  tags             tags?
   accountTemplate  accountTemplate[] @relation("DocumentToaccountTemplate")
-}
-
-model tags {
-  id         Int      @id @default(autoincrement())
-  title      String   @default("")
-  documentId Int      @unique
-  Document   Document @relation(fields: [documentId], references: [id])
+  Tags Tags[]
 }
 
 model documentComments {
@@ -82,4 +76,11 @@ model Message {
   metaData  Json?
   role      String
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+}
+
+model Tags {
+  id Int @id @default(autoincrement())
+  body String @default("")
+  documentId Int
+  document Document @relation(fields: [documentId], references: [id])
 }
