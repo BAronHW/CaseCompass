@@ -1,9 +1,20 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as crypto from 'crypto';
 import { s3 } from "../lib/s3Context.js";
 import { db } from "../lib/prismaContext.js";
 import { ChunkPDF } from "./chunkPDF.js";
 import { GoogleGenAI } from "@google/genai";
+const getPreSignedUrl = async (key) => {
+    const command = new GetObjectCommand({
+        Bucket: process.env.BUCKET_NAME,
+        Key: key
+    });
+    const preSignedUrl = await getSignedUrl(s3, command, {
+        expiresIn: 3600
+    });
+    return preSignedUrl;
+};
 export const uploadToS3 = async (jobData) => {
     try {
         if (!jobData.file || !jobData.uid) {
@@ -12,7 +23,6 @@ export const uploadToS3 = async (jobData) => {
         const buffer = Buffer.from(jobData.file, 'base64');
         const uniqueName = crypto.randomBytes(32).toString('hex');
         const bucketName = process.env.BUCKET_NAME;
-        const bucketRegion = process.env.BUCKET_REGION;
         const params = {
             Bucket: bucketName,
             Key: uniqueName,
@@ -21,13 +31,14 @@ export const uploadToS3 = async (jobData) => {
         };
         const command = new PutObjectCommand(params);
         const sentDocument = await s3.send(command);
-        const objectUrl = `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${uniqueName}`;
+        const objectUrl = await getPreSignedUrl(uniqueName);
         const uploadedDocument = await db.document.create({
             data: {
                 key: uniqueName,
                 title: jobData.name,
                 size: jobData.size,
                 uid: jobData.uid,
+                url: objectUrl
             }
         });
         if (sentDocument.$metadata.httpStatusCode !== 200) {

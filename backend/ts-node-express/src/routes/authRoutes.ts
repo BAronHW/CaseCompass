@@ -1,4 +1,4 @@
-import { Router } from 'express'
+import { Router } from 'express';
 import { registerUser, loginUser, refresh, protectedRoute, logout } from '../controllers/authController.js'
 import { verifyToken } from '../middlewares/verifyToken.js';
 

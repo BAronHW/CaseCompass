@@ -1,4 +1,4 @@
 export const redisConnection = {
-    host: 'localhost',
-    port: 6379,
+  host: 'redis',
+  port: 6379,
 };

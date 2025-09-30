@@ -14,7 +14,7 @@ model Document {
   key              String            @unique
   size             Int
   uid              String
-  tagId            String
+  tagId            String?
   content          String?           @default("")
   title            String?           @default("")
   url              String            @default("")
