@@ -1,7 +1,6 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 import { io } from "../../app.js";
 import { decodeJWT } from "../../functions/decodeJWT.js";
-import { DocumentChunk } from "../../interfaces/DocumentChunk.js";
 import { db } from "../../lib/prismaContext.js";
 import { chunkRetrieval } from "../../functions/chunkRetrieval.js";
 import { HydeConfig, HydeService } from "../../services/HydeService.js";

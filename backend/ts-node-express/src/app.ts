@@ -18,9 +18,13 @@ const io = new Server(server, {
   cors: {
     origin: 'http://localhost:5173',
     methods: ['GET', 'POST'],
-    credentials: true
-  }
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
+  },
+  transports: ['websocket', 'polling'],
+  allowEIO3: true
 });
+
 app.set('trust proxy', 1)
 app.use(session({
   secret: process.env.SESSION_SECRET!,
@@ -54,7 +58,7 @@ websocketService();
 app.use('/api/auth', authRoutes);
 app.use('/api/', userRoutes);
 app.use('/api/documents/', documentRoutes);
-app.use('/api/chat/', chatRoutes)
+app.use('/api/chat/', chatRoutes);
 
 app.use(errorHandler);
 

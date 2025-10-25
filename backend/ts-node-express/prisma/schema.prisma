@@ -14,7 +14,6 @@ model Document {
   key              String            @unique
   size             Int
   uid              String
-  tagId            String?
   content          String?           @default("")
   title            String?           @default("")
   url              String            @default("")
@@ -22,7 +21,6 @@ model Document {
   documentChunks   documentChunks[]
   documentComments documentComments?
   accountTemplate  accountTemplate[] @relation("DocumentToaccountTemplate")
-  Tags Tags[]
 }
 
 model documentComments {
@@ -78,9 +76,9 @@ model Message {
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
 }
 
-model Tags {
-  id Int @id @default(autoincrement())
-  body String @default("")
-  documentId Int
-  document Document @relation(fields: [documentId], references: [id])
-}
+// model Tags {
+//   id Int @id @default(autoincrement())
+//   body String @default("")
+//   documentId Int
+//   document Document @relation(fields: [documentId], references: [id])
+// }
