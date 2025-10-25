@@ -42,7 +42,7 @@ services:
     container_name: ts_app
     restart: unless-stopped
     ports:
-      - "${PORT:-8000}:8000"
+      - "${PORT}:3000"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-myapp}
@@ -50,6 +50,7 @@ services:
       - REDIS_HOST=redis
       - SESSION_SECRET=${SESSION_SECRET}
       - GEMINI_KEY=${GEMINI_KEY}
+      - GEMINI=${GEMINI}
       - JWT_SECRET=${JWT_SECRET}
       - BUCKET_REGION=${BUCKET_REGION}
       - S3_ACCESS_KEY=${S3_ACCESS_KEY}

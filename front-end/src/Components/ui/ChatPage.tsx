@@ -3,10 +3,11 @@ import { io } from "socket.io-client";
 import { customFetch, requestTypeEnum } from "../../lib/customFetch";
 import { Send, Bot, User, Sparkles } from "lucide-react";
 
-const socket = io("ws://localhost:8000", {
+const socket = io("http://localhost:3000", {
   autoConnect: false,
   reconnectionAttempts: 3,
   reconnectionDelay: 10000,
+  transports: ['polling', 'websocket']
 });
 
 interface ChatMessages {
@@ -18,6 +19,20 @@ interface ChatMessages {
   metaData: string;
   role: "user" | "llm";
 }
+
+interface ChatRoomCreateStruct {
+    message: string;
+    chatRoom: string;
+  }
+
+  interface NewHumanMessagePayload {
+    newMessage: ChatMessages;
+  }
+
+  interface NewLlmResponsePayload {
+    newLlmMessage: ChatMessages;
+  }
+
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessages[]>([]);
@@ -55,19 +70,6 @@ export default function ChatPage() {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  interface ChatRoomCreateStruct {
-    message: string;
-    chatRoom: string;
-  }
-
-  interface NewHumanMessagePayload {
-    newMessage: ChatMessages;
-  }
-
-  interface NewLlmResponsePayload {
-    newLlmMessage: ChatMessages;
-  }
-
   useEffect(() => {
     if (!socket.connected) socket.connect();
     const token = sessionStorage.getItem("Authorization");
@@ -100,7 +102,7 @@ export default function ChatPage() {
   useEffect(() => {
     const getExistingMessages = async () => {
       try {
-        const response = await customFetch('http://localhost:8000/api/chat', requestTypeEnum.GET);
+        const response = await customFetch('http://localhost:3000/api/chat', requestTypeEnum.GET);
         console.log(response);
         if (response.messages && Array.isArray(response.messages)) {
           setMessages(response.messages);
