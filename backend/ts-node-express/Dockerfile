@@ -1,22 +1,11 @@
-FROM node:18-alpine
+FROM node:22-alpine
 
-WORKDIR /app
+WORKDIR /usr/src/app
 
-COPY package*.json ./
-COPY tsconfig.json ./
+COPY package.json package-lock.json ./
 
 RUN npm ci
 
 COPY . .
 
-RUN npx prisma generate
-
-RUN npm run build
-
-RUN npm ci --only=production && npm cache clean --force
-
-RUN npx prisma generate
-
-EXPOSE 8000
-
-CMD ["node", "dist/server.js"]
+CMD ["sh", "-c", "npm run db:deploy && npm run dev"]

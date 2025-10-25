@@ -1,9 +1,7 @@
 version: '3.8'
-
 services:
-  # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
+    image: ankane/pgvector:latest
     container_name: postgres_db
     restart: unless-stopped
     environment:
@@ -14,7 +12,6 @@ services:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - app-network
     healthcheck:
@@ -23,7 +20,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis (for session storage and caching)
   redis:
     image: redis:7-alpine
     container_name: redis_cache
@@ -51,8 +47,9 @@ services:
       - "${PORT:-8000}:8000"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-myapp}
       - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
       - SESSION_SECRET=${SESSION_SECRET}
       - GEMINI=${GEMINI}
     depends_on:
@@ -69,6 +66,25 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  prisma-studio:
+    image: node:lts-alpine3.17
+    container_name: prisma_studio
+    working_dir: /usr/src/app
+    volumes:
+      - .:/usr/src/app
+    command: sh -c "npm install prisma && npx prisma studio --port 5555 --browser none"
+    ports:
+      - "5555:5555"
+    environment:
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-myapp}
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      app:
+        condition: service_started
 
 volumes:
   postgres_data:
