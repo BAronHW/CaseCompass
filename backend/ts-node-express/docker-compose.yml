@@ -62,11 +62,14 @@ services:
       redis:
         condition: service_healthy
     volumes:
+      - ./src:/usr/src/app/src
+      - ./prisma:/usr/src/app/prisma
+      - /usr/src/app/node_modules # this creates a volume for the node modules to exist independant on what OS you use
       - .:/usr/src/app
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
