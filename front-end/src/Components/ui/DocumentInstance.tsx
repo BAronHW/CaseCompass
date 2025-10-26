@@ -10,6 +10,7 @@ interface Document {
   content: string;
   uid: string;
   url?: string;
+  objectUrl?: string;
   tags?: { name: string }[];
 }
 
@@ -36,9 +37,14 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
         `http://localhost:3000/api/documents/${documentId}`, 
         requestTypeEnum.GET, 
       );
+
+      console.log('Fetched document details:', data);
       
       if (data && data.foundDocumentWithId) {
-        setCurrentOpenDoc(data.foundDocumentWithId);
+        setCurrentOpenDoc({ 
+          ...data.foundDocumentWithId,
+          objectUrl: data.objectUrl
+        });
         setIsModalOpen(true);
       }
     } catch (err) {
@@ -57,6 +63,8 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
   function togglePDFViewer() {
     setShowPDFViewer(!showPDFViewer);
   }
+
+  console.log('DocumentInstance render:', currentOpenDoc?.objectUrl);
 
   return (
     <>
@@ -247,7 +255,7 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
                         <div className="p-4">
                           <PDFViewer 
                             id={currentOpenDoc.id} 
-                            url={currentOpenDoc.url} 
+                            url={currentOpenDoc.objectUrl} 
                           />
                         </div>
                       </div>

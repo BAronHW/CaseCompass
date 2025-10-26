@@ -5,6 +5,7 @@ import { s3 } from "../lib/s3Context.js";
 import { db } from "../lib/prismaContext.js";
 import { ChunkPDF } from "./chunkPDF.js";
 import { GoogleGenAI } from "@google/genai";
+import { getPreSignedUrl } from "../lib/getPreSignedUrl.js";
 
 
 export interface UploadToS3JobData {
@@ -19,19 +20,6 @@ export interface UploadToS3Result {
     name: string;
     size: number;
     uid: string;
-}
-
-const getPreSignedUrl = async (key: string): Promise<string> => {
-    const command = new GetObjectCommand({
-        Bucket: process.env.BUCKET_NAME,
-        Key: key
-    })
-
-    const preSignedUrl = await getSignedUrl(s3,command, {
-        expiresIn: 3600
-    });
-
-    return preSignedUrl
 }
 
 export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3Result> => {

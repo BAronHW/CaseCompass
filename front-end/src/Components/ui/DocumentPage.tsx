@@ -28,9 +28,7 @@ function DocumentPage() {
           'http://localhost:3000/api/documents/', 
           requestTypeEnum.GET, 
         );
-        
-        console.log('Response data:', data);
-        
+                
         if (data && data.allDocumentsWithUuid) {
           setDocuments(data.allDocumentsWithUuid);
         } else if (Array.isArray(data)) {
