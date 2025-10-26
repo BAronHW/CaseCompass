@@ -21,7 +21,7 @@ const io = new Server(server, {
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
   },
-  transports: ['websocket', 'polling'],
+  transports: ['websocket', 'polling'], // if the websocket fails default to polling 
   allowEIO3: true
 });
 

@@ -133,6 +133,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
         res
         .cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite:'strict', maxAge: 60 * 60 * 1000})
+        .cookie('Authorization', accessToken, { httpOnly: true, secure: true, sameSite:'strict', maxAge: 60 * 60 * 1000})
         .header('Authorization', accessToken)
         .json({user: returnUser});
         return
@@ -147,6 +148,7 @@ export const refresh = async (req: Request, res: Response) => {
 
     try {
         const refreshToken = req.cookies.refreshToken;
+        console.log("Refresh token:", refreshToken);
         if(!refreshToken){
             res.status(400).json({message: "missing refresh token"});
             return
