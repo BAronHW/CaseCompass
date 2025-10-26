@@ -9,7 +9,7 @@ import { error } from "console";
 /**
  * TODO:
  * 1. refactor to use transactions to ensure atomic mutations\
- * 2. refactor so that instead of using refresh-tokens in cookies
+ * 2. refactor to put both tokens in http only cookies
  */
 
 export const protectedRoute = (req: Request, res: Response) => {
