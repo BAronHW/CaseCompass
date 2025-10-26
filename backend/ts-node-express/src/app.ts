@@ -50,11 +50,6 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 websocketService();
 
-/**
- * TODO: 
- * Dockerize the entire application
- */
-
 app.use('/api/auth', authRoutes);
 app.use('/api/', userRoutes);
 app.use('/api/documents/', documentRoutes);
