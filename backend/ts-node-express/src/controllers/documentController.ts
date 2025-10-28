@@ -8,7 +8,6 @@ export const getAllDocuments = async (req: Request, res: Response): Promise<void
     try{
         const authToken = req.headers.authorization;
 
-        console.log(authToken, 'authtoken');
         if (!authToken) {
             res.status(401).json({ error: 'Authorization header is required' });
             return;
@@ -158,19 +157,19 @@ export const getDocumentById = async (req: Request, res: Response, next: NextFun
     }
 }
 
-export const deleteDocument = (req: Request, res: Response, next: NextFunction) => {
+// export const deleteDocument = (req: Request, res: Response, next: NextFunction) => {
 
-}
+// }
 
-export const updateDocument = (req: Request, res: Response, next: NextFunction) => {
+// export const updateDocument = (req: Request, res: Response, next: NextFunction) => {
 
-}
+// }
 
-export const analyzeSingleDocument = (req: Request, res: Response, next: NextFunction) => {
+// export const analyzeSingleDocument = (req: Request, res: Response, next: NextFunction) => {
 
-}
+// }
 
-export const batchAnalyzeDocument = (req: Request, res: Response, next: NextFunction) => {
+// export const batchAnalyzeDocument = (req: Request, res: Response, next: NextFunction) => {
     
-}
+// }
 

@@ -128,7 +128,6 @@ export const pushToChat = async (req: Request, res: Response) => {
 export const deleteChat = async (req: Request, res: Response) => {
     try {
         const authToken = req.headers.authorization;
-        const { body } = req.body;
         
         if (!authToken) {
             res.status(401).json({ error: 'Authorization header is required' });

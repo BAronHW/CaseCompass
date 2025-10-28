@@ -89,9 +89,12 @@ export const registerUser = async (req: Request, res: Response) => {
 
 export const loginUser = async (req: Request, res: Response) => {
     try{
+
+        const { email, password } = req.body;
+
         const user = await db.user.findUnique({
             where:{
-                email: req.body.email
+                email: email
             }
         })
 
@@ -100,7 +103,7 @@ export const loginUser = async (req: Request, res: Response) => {
             return
         }
 
-        const passwordMatch = await bcrypt.compare(req.body.password, user.password);
+        const passwordMatch = await bcrypt.compare(password, user.password);
         if(!passwordMatch){
             res.status(401).json({message:'invalid credentials'});
             return
