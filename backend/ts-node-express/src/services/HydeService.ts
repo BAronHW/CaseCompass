@@ -1,12 +1,5 @@
 import { GoogleGenAI } from "@google/genai"
-import { tryCatch } from "bullmq";
-
-export interface HydeConfig {
-  domain?: string;
-  documentType?: string;
-  maxTokens?: number;
-  temperature?: number;
-}
+import { HydeConfig } from "../models/models.js";
 
 export class HydeService {
     private genAI: GoogleGenAI

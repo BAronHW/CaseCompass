@@ -29,7 +29,7 @@ const LoginPage = () => {
 
         if(resp.ok){
           const data = await resp.json();
-          const { user } = data;
+          const { user } = data.data;
           sessionStorage.setItem('Authorization', user.accessToken);
           navigate('/upload')
         }

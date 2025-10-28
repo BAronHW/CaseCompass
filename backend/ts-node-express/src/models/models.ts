@@ -31,3 +31,69 @@ export enum TypeOfTask {
   ConvertChunkToEmbedding,
   DeleteDocument
 }
+
+export interface ErrorResponse {
+    success: false;
+    error: string;
+    details?: any;
+    statusCode: number;
+}
+
+export interface SuccessResponse<T> {
+    message?: string;
+    data?: T;
+}
+
+export interface LoginResult {
+    user: {
+        name: string;
+        email: string;
+        uid: string;
+    };
+    accessToken: string;
+    refreshToken: string;
+}
+
+export interface HydeConfig {
+  domain?: string;
+  documentType?: string;
+  maxTokens?: number;
+  temperature?: number;
+}
+
+export class Response {
+
+ public static createErrorResponse(
+        message: string,
+        statusCode: number = 500,
+        details?: any
+    ): { body: ErrorResponse } {
+        return {
+            body: {
+                statusCode,
+                success: false,
+                error: message,
+                details
+            }
+        };
+    }
+
+  public static createSuccessResponse<T>(
+        message?: string,
+        data?: T,
+        statusCode: number = 200
+    ): { statusCode: number; body: SuccessResponse<T> } {
+        return {
+            statusCode,
+            body: {
+                message,
+                data
+            }
+        };
+    }
+}
+
+export type ServiceResponse<T> = {
+    statusCode: number;
+    body: SuccessResponse<T>;
+};

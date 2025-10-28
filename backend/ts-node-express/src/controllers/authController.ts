@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import { db } from "../lib/prismaContext.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import crypt from 'crypto';
 import 'dotenv/config.js';
-import { error } from "console";
+import { loginUserSchema, registerUserSchema } from "../validationSchemas/authValidationSchemas.js";
+import { AuthService } from "../services/AuthService.js";
 
 /**
  * TODO:
@@ -22,136 +22,103 @@ export const registerUser = async (req: Request, res: Response) => {
 
         const {name, email, password} = req.body;
 
-        const userHasExists = await db.user.findFirst({
-            where:{
-                email: email
-            }
-        })
+        await registerUserSchema.validate(req.body)
 
-        if(userHasExists){
-            res.status(400).send('This user already exists!');
-            return
-        }
+        const authService = new AuthService();
+        const response = await authService.registerUser(name, email, password);
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const uuid = crypt.randomUUID()
-
-        const newUser = await db.user.create({
-            data:{
-                name: name,
-                email: email,
-                password: hashedPassword,
-                uid: uuid,
-                refreshToken:''
-
-            }
-        })
-
-        if (!newUser) {
-            res.status(400).json({
-                error: 'Unable to make new user'
-            })
-        }
-
-        await db.chat.create({
-            data: {
-                userId: newUser.id,
-
-            }
-        })
-
-        await db.accountTemplate.create({
-            data:{
-                ownerId: newUser.id
-            }
-        })
-
-        const returnNewUser = {
-            name: name,
-            email: email,
-            uuid: uuid
-        }
-
-        res.status(201).json({
-            message:'User registered',
-            newUser: returnNewUser
-        });
-        return
+        res.status(response.statusCode).json(response.body);
+        return;
 
     }
-    catch(error){
-        console.log(error)
-        res.status(500).json({ error: 'Internal server error' });
-        return
+    catch(error: any){
+
+        if (error.name === 'ValidationError') {
+            res.status(400).json({
+                success: false,
+                error: error.message,
+                code: 'VALIDATION_ERROR'
+            });
+            return;
+        }
+
+        if (error?.statusCode && error?.body) {
+            res.status(error.statusCode).json(error.body);
+            return;
+        }
+        res.status(500).json({ 
+            success: false,
+            error: 'Internal server error' 
+        });
+        return;
     }
 
 }
 
 export const loginUser = async (req: Request, res: Response) => {
-    try{
+    try {
+        await loginUserSchema.validate(req.body);
 
         const { email, password } = req.body;
 
-        const user = await db.user.findUnique({
-            where:{
-                email: email
-            }
-        })
+        const authService = new AuthService();
+        const response = await authService.loginUser(email, password);
 
-        if(!user){
-            res.status(401).json({message: 'This user does not exist please register or the credentials you have entered are wrong'})
-            return
+        if (!response.body.data) {
+            res.status(500).json({
+                success: false,
+                error: 'Invalid response from service'
+            });
+            return;
         }
 
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if(!passwordMatch){
-            res.status(401).json({message:'invalid credentials'});
-            return
-        }
-
-        const userForToken = {
-            id: user.id,
-            email: user.email
-        }
-        const jwtSecret = process.env.JWT_SECRET;
-        
-        const accessToken = jwt.sign({ userForToken }, jwtSecret as string, { expiresIn: '1h' });
-        const refreshToken = jwt.sign({ userForToken }, jwtSecret as string, { expiresIn: '1d' });
-
-        const returnUser = {
-            name: user.name,
-            email: user.email,
-            uid: user.uid,
-            accessToken
-        }
-
-        await db.user.update({
-            where:{
-                email: req.body.email
-            },
-            data:{
-                refreshToken: refreshToken
-            }
-        })
+        const { accessToken, refreshToken } = response.body.data;
 
         res
-        .cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite:'strict', maxAge: 60 * 60 * 1000})
-        .cookie('Authorization', accessToken, { httpOnly: true, secure: true, sameSite:'strict', maxAge: 60 * 60 * 1000})
-        .header('Authorization', accessToken)
-        .json({user: returnUser});
-        return
+            .cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 24 * 60 * 60 * 1000
+            })
+            .cookie('Authorization', accessToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 60 * 60 * 1000
+            })
+            .header('Authorization', accessToken)
+            .status(response.statusCode)
+            .json(response.body);
+        return;
+
+    } catch (error: any) {
+        if (error.name === 'ValidationError') {
+            res.status(400).json({
+                success: false,
+                error: error.message,
+                code: 'VALIDATION_ERROR'
+            });
+            return;
+        }
+
+        if (error?.statusCode && error?.body) {
+            res.status(error.statusCode).json(error.body);
+            return;
+        }
+
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+        return;
     }
-    catch(error){
-        console.log(error)
-        res.status(500).json({error: 'Internal server error'});
-    }
-}
+};
 
 export const refresh = async (req: Request, res: Response) => {
 
     try {
         const refreshToken = req.cookies.refreshToken;
-        console.log("Refresh token:", refreshToken);
         if(!refreshToken){
             res.status(400).json({message: "missing refresh token"});
             return
@@ -169,7 +136,6 @@ export const refresh = async (req: Request, res: Response) => {
         res.status(200).json({newAccessToken});
         return
     } catch (error) {
-        console.log(error)
         res.status(400).json({error})
         return
     }
