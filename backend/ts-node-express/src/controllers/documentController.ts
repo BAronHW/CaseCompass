@@ -6,6 +6,7 @@ import { getPreSignedUrl } from "../lib/getPreSignedUrl.js";
 
 export const getAllDocuments = async (req: Request, res: Response): Promise<void> => {
     try{
+        // switch to services and also need to use requestContext here
         const authToken = req.headers.authorization;
 
         if (!authToken) {

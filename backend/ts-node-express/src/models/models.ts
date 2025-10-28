@@ -97,3 +97,17 @@ export type ServiceResponse<T> = {
     statusCode: number;
     body: SuccessResponse<T>;
 };
+
+export interface DocumentResult {
+    id: number;
+    name: string;
+    size: number;
+    key: string;
+    uid: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface DocumentWithUrl extends DocumentResult {
+    objectUrl: string;
+}
