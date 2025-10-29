@@ -1,20 +1,10 @@
-import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import * as crypto from 'crypto';
 import { s3 } from "../lib/s3Context.js";
 import { db } from "../lib/prismaContext.js";
 import { ChunkPDF } from "./chunkPDF.js";
 import { GoogleGenAI } from "@google/genai";
-const getPreSignedUrl = async (key) => {
-    const command = new GetObjectCommand({
-        Bucket: process.env.BUCKET_NAME,
-        Key: key
-    });
-    const preSignedUrl = await getSignedUrl(s3, command, {
-        expiresIn: 3600
-    });
-    return preSignedUrl;
-};
+import { getPreSignedUrl } from "../lib/getPreSignedUrl.js";
 export const uploadToS3 = async (jobData) => {
     try {
         if (!jobData.file || !jobData.uid) {

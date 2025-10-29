@@ -1,10 +1,11 @@
 import { jobQueue } from "../lib/bullMQContext.js";
 import { decodeJWT } from "../functions/decodeJWT.js";
 import { db } from "../lib/prismaContext.js";
+import { getPreSignedUrl } from "../lib/getPreSignedUrl.js";
 export const getAllDocuments = async (req, res) => {
     try {
+        // switch to services and also need to use requestContext here
         const authToken = req.headers.authorization;
-        console.log(authToken, 'authtoken');
         if (!authToken) {
             res.status(401).json({ error: 'Authorization header is required' });
             return;
@@ -34,18 +35,6 @@ export const getAllDocuments = async (req, res) => {
         res.status(200).json({
             allDocumentsWithUuid
         });
-    }
-    catch (error) {
-        console.error(error);
-        res.status(500).json({
-            error: 'Internal server error',
-            details: error instanceof Error ? error.message : 'Unknown error'
-        });
-    }
-};
-export const getSingleDocument = async (req, res) => {
-    try {
-        const authToken = req.headers.authorization;
     }
     catch (error) {
         console.error(error);
@@ -121,8 +110,11 @@ export const getDocumentById = async (req, res, next) => {
         if (!foundDocumentWithId) {
             res.status(400).json({ error: 'unable to find document with this Id' });
         }
+        // TODO: add a layer of cacheing here later
+        const objectUrl = await getPreSignedUrl(foundDocumentWithId.key);
         res.status(200).json({
-            foundDocumentWithId
+            foundDocumentWithId,
+            objectUrl
         });
     }
     catch (error) {
@@ -133,11 +125,11 @@ export const getDocumentById = async (req, res, next) => {
         });
     }
 };
-export const deleteDocument = (req, res, next) => {
-};
-export const updateDocument = (req, res, next) => {
-};
-export const analyzeSingleDocument = (req, res, next) => {
-};
-export const batchAnalyzeDocument = (req, res, next) => {
-};
+// export const deleteDocument = (req: Request, res: Response, next: NextFunction) => {
+// }
+// export const updateDocument = (req: Request, res: Response, next: NextFunction) => {
+// }
+// export const analyzeSingleDocument = (req: Request, res: Response, next: NextFunction) => {
+// }
+// export const batchAnalyzeDocument = (req: Request, res: Response, next: NextFunction) => {
+// }

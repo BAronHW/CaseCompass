@@ -6,7 +6,7 @@ import documentRoutes from './routes/documentRoutes.js';
 import 'dotenv/config.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import session from 'express-session';
+import cookieSession from 'cookie-session';
 import http from 'http'
 import { Server } from 'socket.io';
 import { websocketService } from './socket/service/WebsocketService.js';
@@ -26,15 +26,11 @@ const io = new Server(server, {
 });
 
 app.set('trust proxy', 1)
-app.use(session({
+app.use(cookieSession({
   secret: process.env.SESSION_SECRET!,
-  resave: false,
-  saveUninitialized: false,
-  cookie: { 
-    secure: false,
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000
-  }
+  maxAge: 24 * 60 * 60 * 1000,
+  secure: false,
+  httpOnly: true
 }));
 
 app.use(cors({

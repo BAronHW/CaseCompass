@@ -1,7 +1,6 @@
 import { decodeJWT } from "../functions/decodeJWT.js";
 import { db } from "../lib/prismaContext.js";
 import { determineIfQuestion } from "../lib/questionDetermine.js";
-// TODO: use websockets
 export const createNewChat = async (req, res) => {
     try {
         const authToken = req.headers.authorization;
@@ -99,7 +98,6 @@ export const pushToChat = async (req, res) => {
 export const deleteChat = async (req, res) => {
     try {
         const authToken = req.headers.authorization;
-        const { body } = req.body;
         if (!authToken) {
             res.status(401).json({ error: 'Authorization header is required' });
             return;
