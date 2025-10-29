@@ -46,11 +46,13 @@ export const registerUser = async (req: Request, res: Response) => {
             res.status(error.statusCode).json(error.body);
             return;
         }
+        
         res.status(500).json({ 
             success: false,
             error: 'Internal server error' 
         });
         return;
+
     }
 
 }

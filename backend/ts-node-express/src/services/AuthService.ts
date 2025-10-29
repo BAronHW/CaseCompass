@@ -75,7 +75,7 @@ export class AuthService {
     }
 
     public async loginUser(
-        email: string, 
+        email: string,
         password: string
     ): Promise<ServiceResponse<LoginResult>> {
 
@@ -129,10 +129,19 @@ export class AuthService {
             data: { refreshToken }
         });
 
+        const safeUser = {
+            name: user.name ?? '',
+            email: user.email,
+            uid: user.uid,
+            password: user.password,
+            refreshToken: user.refreshToken,
+            id: user.id
+        };
+
         const response = Response.createSuccessResponse(
             'Login successful',
             {
-                user: user,
+                user: safeUser,
                 accessToken,
                 refreshToken
             }
