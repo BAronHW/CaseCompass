@@ -111,3 +111,8 @@ export interface DocumentResult {
 export interface DocumentWithUrl extends DocumentResult {
     objectUrl: string;
 }
+
+export interface contractAnalysisBody {
+    body: string,
+    methodDetails: string
+}
