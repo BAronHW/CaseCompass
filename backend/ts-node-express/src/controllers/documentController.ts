@@ -3,6 +3,7 @@ import { jobQueue } from "../lib/bullMQContext.js";
 import { decodeJWT } from "../functions/decodeJWT.js";
 import { db } from "../lib/prismaContext.js";
 import { getPreSignedUrl } from "../lib/getPreSignedUrl.js";
+import { DocumentService } from "../services/DocumentService.js";
 
 export const getAllDocuments = async (req: Request, res: Response): Promise<void> => {
     try{
@@ -23,38 +24,30 @@ export const getAllDocuments = async (req: Request, res: Response): Promise<void
 
         const userId = decodedAuthToken.userForToken.id;
 
-        const userObj = await db.user.findUnique({
-            where: {
-                id: userId
-            }
-        })
+        const docService = new DocumentService();
+        const allDocs = await docService.getAllDocuments(userId);
 
-        const userUuid = userObj?.uid;
+        res.status(allDocs.statusCode).json(allDocs.body.data?.documents);
 
-        const allDocumentsWithUuid = await db.document.findMany({
-            where: {
-                uid: userUuid
-            }
-        })
-
-        if (!allDocumentsWithUuid) {
+    } catch(error: any) {
+        if (error.name === 'ValidationError') {
             res.status(400).json({
-                error: 'unable to find any Documents'
-            })
+                success: false,
+                error: error.message,
+                code: 'VALIDATION_ERROR'
+            });
+            return;
         }
-        
-        res.status(200).json({
-            allDocumentsWithUuid
-        })
 
-
-
-    } catch(error) {
-        console.error(error);
-        res.status(500).json({
-            error: 'Internal server error', 
-            details: error instanceof Error ? error.message : 'Unknown error' 
-        })
+        if (error?.statusCode && error?.body) {
+            res.status(error.statusCode).json(error.body);
+            return;
+        }
+        res.status(500).json({ 
+            success: false,
+            error: 'Internal server error' 
+        });
+        return;
     }
 }
 
@@ -77,51 +70,35 @@ export const uploadDocument = async (req: Request, res: Response): Promise<void>
 
         const userId = decodedAuthToken.userForToken.id;
 
-        const user = await db.user.findUnique({
-            where: {
-                id: userId
-            }
-        });
-
-        if (!user) {
-            res.status(404).json({ error: 'User not found' });
-            return;
-        }
-
-        if (!name || !size || !file) {
-            res.status(400).json({ error: 'Missing required fields: name, size, or file' });
-            return;
-        }
-
-        await jobQueue.add('uploadDocumentToS3', 
-            {
-                name: name, 
-                size: size, 
-                file: file, 
-                uid: user.uid
-            },
-            {
-                removeOnComplete: {
-                    age: 3600,
-                    count: 100,
-                },
-                removeOnFail: {
-                    age: 24 * 3600
-                }
-            }
+        const docService = new DocumentService();
+        const uploadRes = await docService.uploadDocument(
+            userId,
+            name,
+            size,
+            file
         );
 
-        res.status(200).json({ 
-            message: 'Document upload job queued successfully',
-            userId: userId 
-        });
+        res.status(uploadRes.statusCode).json(uploadRes.body.data?.userId)
 
-    } catch (error) {
-        console.error('Error in uploadDocument:', error);
+    } catch (error: any) {
+        if (error.name === 'ValidationError') {
+            res.status(400).json({
+                success: false,
+                error: error.message,
+                code: 'VALIDATION_ERROR'
+            });
+            return;
+        }
+
+        if (error?.statusCode && error?.body) {
+            res.status(error.statusCode).json(error.body);
+            return;
+        }
         res.status(500).json({ 
-            error: 'Internal server error', 
-            details: error instanceof Error ? error.message : 'Unknown error' 
+            success: false,
+            error: 'Internal server error' 
         });
+        return;
     }
 };
 
@@ -131,30 +108,30 @@ export const getDocumentById = async (req: Request, res: Response, next: NextFun
 
         const docId = parseInt(documentId);
 
-        const foundDocumentWithId = await db.document.findUnique({
-            where: {
-                id: docId
-            }
-        })
+        const docService = new DocumentService();
+        const foundDoc = await docService.getDocumentById(docId);
 
-        if (!foundDocumentWithId) {
-            res.status(400).json({ error: 'unable to find document with this Id' })
-        }
-
-        // TODO: add a layer of cacheing here later
-        const objectUrl = await getPreSignedUrl(foundDocumentWithId!.key);
-
-        res.status(200).json({
-            foundDocumentWithId,
-            objectUrl
-        })
+        res.status(foundDoc.statusCode).json(foundDoc.body.data);
         
     } catch (error: any) {
-        console.log('Error in getDocumentById', error)
-        res.status(500).json({
-            error: 'Internal server error',
-            details: error instanceof Error ? error.message : 'Unknown error'
-        })
+        if (error.name === 'ValidationError') {
+            res.status(400).json({
+                success: false,
+                error: error.message,
+                code: 'VALIDATION_ERROR'
+            });
+            return;
+        }
+
+        if (error?.statusCode && error?.body) {
+            res.status(error.statusCode).json(error.body);
+            return;
+        }
+        res.status(500).json({ 
+            success: false,
+            error: 'Internal server error' 
+        });
+        return;
     }
 }
 

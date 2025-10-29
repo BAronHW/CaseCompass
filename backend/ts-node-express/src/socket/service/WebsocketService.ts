@@ -3,7 +3,8 @@ import { io } from "../../app.js";
 import { decodeJWT } from "../../functions/decodeJWT.js";
 import { db } from "../../lib/prismaContext.js";
 import { chunkRetrieval } from "../../functions/chunkRetrieval.js";
-import { HydeConfig, HydeService } from "../../services/HydeService.js";
+import { HydeService } from "../../services/HydeService.js";
+import { HydeConfig } from "../../models/models.js";
 
 export function websocketService() {
     io.on('connection', (socket) => {
@@ -89,11 +90,11 @@ export function websocketService() {
 
         if (!enableRag){
             const generateLlmmResponse = async (body: string): Promise<GenerateContentResponse> => {
-            const response = await genAI.models.generateContent({
-                model: 'gemini-2.0-flash-001',
-                contents: body,
-            });
-            return response;
+                const response = await genAI.models.generateContent({
+                    model: 'gemini-2.0-flash-001',
+                    contents: body,
+                });
+                return response;
             }
 
             const llmResp = await generateLlmmResponse(messageBody);
@@ -129,7 +130,7 @@ export function websocketService() {
             const response = await genAI.models.generateContent({
                 model: 'gemini-2.0-flash-001',
                 contents: `Given this user question ${messageBody} and this retrieved documentChunk ${relevantChunks[0].content}
-                        can you give an answer to the users original question which was: ${messageBody}`,
+                        can you give an answer to the users original question which was: ${messageBody} DON'T MENTION CHUNKS IN YOUR ANSWER IN REGARDS TO DOCUMENTCHUNKS`,
             });
             return response;
         }

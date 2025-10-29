@@ -38,14 +38,15 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
         requestTypeEnum.GET, 
       );
 
-      console.log('Fetched document details:', data);
+      console.log(data.objectUrl)
       
-      if (data && data.foundDocumentWithId) {
-        setCurrentOpenDoc({ 
-          ...data.foundDocumentWithId,
+      if (data && data.document.id) {
+        setCurrentOpenDoc({
+          ...data.document,
           objectUrl: data.objectUrl
         });
         setIsModalOpen(true);
+        console.log(currentOpenDoc)
       }
     } catch (err) {
       console.error('Error fetching document:', err);
@@ -63,8 +64,6 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
   function togglePDFViewer() {
     setShowPDFViewer(!showPDFViewer);
   }
-
-  console.log('DocumentInstance render:', currentOpenDoc?.objectUrl);
 
   return (
     <>
@@ -158,7 +157,7 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    {currentOpenDoc.url && (
+                    {currentOpenDoc.objectUrl && (
                       <button
                         onClick={togglePDFViewer}
                         className={`px-4 py-2 text-sm rounded-md transition-colors ${
@@ -196,29 +195,6 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
                         <p className="text-sm font-medium text-gray-500">File Size</p>
                         <p className="text-sm text-gray-900">{formatFileSize(currentOpenDoc.size)}</p>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Key</p>
-                        <p className="text-sm text-gray-900 font-mono break-all">{currentOpenDoc.key}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">User ID</p>
-                        <p className="text-sm text-gray-900 font-mono">{currentOpenDoc.uid}</p>
-                      </div>
-                      {currentOpenDoc.url && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">Document URL</p>
-                          <p className="text-sm text-blue-600 font-mono break-all">
-                            <a 
-                              href={currentOpenDoc.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="hover:underline"
-                            >
-                              {currentOpenDoc.url}
-                            </a>
-                          </p>
-                        </div>
-                      )}
                       {currentOpenDoc.content && (
                         <div>
                           <p className="text-sm font-medium text-gray-500">Content Preview</p>
