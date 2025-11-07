@@ -21,6 +21,7 @@ model Document {
   documentChunks   documentChunks[]
   documentComments documentComments?
   accountTemplate  accountTemplate[] @relation("DocumentToaccountTemplate")
+  tags Tags[]
 }
 
 model documentComments {
@@ -76,9 +77,9 @@ model Message {
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
 }
 
-// model Tags {
-//   id Int @id @default(autoincrement())
-//   body String @default("")
-//   documentId Int
-//   document Document @relation(fields: [documentId], references: [id])
-// }
+model Tags {
+  id Int @id @default(autoincrement())
+  body String @default("")
+  documentId Int
+  document Document @relation(fields: [documentId], references: [id])
+}
