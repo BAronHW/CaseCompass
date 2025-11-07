@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { customFetch, requestTypeEnum } from "../../lib/customFetch";
 import { PDFViewer } from "./PDFViewer";
+import { createWorker } from 'tesseract.js';
 
 interface Document {
   id: number;
@@ -64,6 +65,15 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
   function togglePDFViewer() {
     setShowPDFViewer(!showPDFViewer);
   }
+
+  (async () => {
+    const worker = await createWorker('eng');
+    if (currentOpenDoc?.objectUrl) {
+      const ret = await worker.recognize(currentOpenDoc?.objectUrl);
+      console.log(ret.data.text);
+      await worker.terminate();
+    }
+  })();
 
   return (
     <>

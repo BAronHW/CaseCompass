@@ -39,10 +39,10 @@ model accountTemplate {
 }
 
 model User {
-  id              Int               @id @default(autoincrement())
-  name            String            @db.VarChar(255)
-  email           String            @unique @db.VarChar(255)
-  uid             String            @unique @db.VarChar(255)
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(255)
+  email           String           @unique @db.VarChar(255)
+  uid             String           @unique @db.VarChar(255)
   password        String
   refreshToken    String
   Chat            Chat?

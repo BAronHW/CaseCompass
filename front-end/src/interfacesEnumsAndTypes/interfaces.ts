@@ -10,3 +10,8 @@ export interface authContextProps {
     accessToken: string,
     setAccessToken: React.Dispatch<React.SetStateAction<object>>
 };
+
+export interface UploadStatus {
+    status: boolean;
+    message: string
+  }

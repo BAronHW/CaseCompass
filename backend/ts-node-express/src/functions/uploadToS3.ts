@@ -1,12 +1,10 @@
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import * as crypto from 'crypto';
 import { s3 } from "../lib/s3Context.js";
 import { db } from "../lib/prismaContext.js";
 import { ChunkPDF } from "./chunkPDF.js";
 import { GoogleGenAI } from "@google/genai";
 import { getPreSignedUrl } from "../lib/getPreSignedUrl.js";
-
 
 export interface UploadToS3JobData {
     file: string;

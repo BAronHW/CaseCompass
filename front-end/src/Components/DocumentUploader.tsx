@@ -1,21 +1,24 @@
 import { useState } from 'react';
 import { customFetch, requestTypeEnum } from '../lib/customFetch';
+import { UploadStatus } from '../interfacesEnumsAndTypes/interfaces';
 
 const DocumentUploader = () => {
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      setFile(file);
     }
   };
 
   const uploadDocument = async () => {
     if (!file) {
-      setUploadStatus({ success: false, message: 'Please select a file first' });
+      setUploadStatus({ status: false, message: 'Please select a file first' });
       return;
     }
 
@@ -47,20 +50,20 @@ const DocumentUploader = () => {
 
       await customFetch('http://localhost:3000/api/documents/createDocument', requestTypeEnum.POST, payload)
       clearInterval(progressInterval);
-      setUploadStatus({success: true, message: 'Sucessfully uploaded document'})
+      setUploadStatus({status: true, message: 'Sucessfully uploaded document'})
     } catch (error) {
       console.log(error)
-      setUploadStatus({ success: false, message: 'Error uploading document' });
+      setUploadStatus({ status: false, message: 'Error uploading document' });
     } finally {
       setUploading(false);
     }
   };
 
   // Helper function to convert file to base64
-  const toBase64 = file => new Promise((resolve, reject) => {
+  const toBase64 = (file: Blob): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
+    reader.onload = () => resolve(reader.result as string);
     reader.onerror = error => reject(error);
   });
 
@@ -106,7 +109,7 @@ const DocumentUploader = () => {
       )}
       
       {uploadStatus && (
-        <div className={`mb-4 p-3 rounded-md ${uploadStatus.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+        <div className={`mb-4 p-3 rounded-md ${uploadStatus.status ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
           {uploadStatus.message}
         </div>
       )}
