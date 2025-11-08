@@ -94,19 +94,71 @@ class TagService {
         }
     }
 
-    public async EditTag() {
+    public async EditTag(tagString: string, tagId: number) {
+
+        const updatedTag = await db.tags.update({
+            where: {
+                id: tagId,
+            }, 
+            data: {
+                body: tagString
+            }
+        })
+
+        return updatedTag;
 
     }
 
-    public async DeleteTag() {
-
+    public async DeleteTag(tagId: number) {
+        const deletedTag = await db.tags.delete({
+            where: {
+                id: tagId
+            }
+        })
+        return Response.createSuccessResponse(
+            'Sucessfully deleted tag', 
+            {
+                deletedTagId: deletedTag.id
+            },
+            200
+        )
     }
 
-    public async GetTag() {
+    public async GetTag(tagId: number) {
+        const foundTag = await db.tags.findUnique({
+            where: {
+                id: tagId
+            }
+        })
 
+        if (!foundTag) {
+            const errorResponse = Response.createErrorResponse(
+                'Tag not found',
+                404,
+                'TAG_NOT_FOUND'
+            );
+            throw errorResponse;
+        }
+
+        return Response.createSuccessResponse(
+            'successfully found tag',
+            {
+                foundTag
+            },
+            200
+        );
     }
 
     public async GetAllTags() {
+
+        const allTags = await db.tags.findMany({})
+        return Response.createSuccessResponse(
+            'successfully got all tags',
+            {
+                allTags
+            },
+            200
+        );
         
     }
 
@@ -154,6 +206,12 @@ class TagService {
             }
         });
 
-        return updatedDoc;
+        return Response.createSuccessResponse(
+            'successfully attached tag to doc',
+            {
+                updatedDoc
+            },
+            200
+        );
     }
 }

@@ -74,8 +74,8 @@ export class Response {
                 success: false,
                 error: message,
                 details,
-                name: "",
-                message: ""
+                name: details,
+                message: message
             }
         };
     }
