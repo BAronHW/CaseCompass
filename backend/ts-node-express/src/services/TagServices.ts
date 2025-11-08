@@ -105,7 +105,21 @@ class TagService {
             }
         })
 
-        return updatedTag;
+        if (!updatedTag) {
+            return Response.createErrorResponse(
+                'Unable to update tag',
+                400,
+                `Unable to update tag with ${tagId}`
+            )
+        }
+
+        return Response.createSuccessResponse(
+            'Successfully updated tag',
+            {
+                updatedTag
+            },
+            200
+        );
 
     }
 
@@ -115,6 +129,14 @@ class TagService {
                 id: tagId
             }
         })
+
+        if (!deletedTag) {
+            return Response.createErrorResponse(
+                'Unable to delete tag',
+                400,
+                `Unable to delete tag with ${tagId}`
+            )
+        }
         return Response.createSuccessResponse(
             'Sucessfully deleted tag', 
             {
