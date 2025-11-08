@@ -29,14 +29,12 @@ const DocumentUploader = () => {
     try {
       const base64File = await toBase64(file);
       
-      // Create payload
       const payload = {
         name: file.name,
         size: file.size,
         file: base64File.split(',')[1]
       };
 
-      // Simulate upload progress
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           const newProgress = prev + 5;
@@ -59,7 +57,6 @@ const DocumentUploader = () => {
     }
   };
 
-  // Helper function to convert file to base64
   const toBase64 = (file: Blob): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);

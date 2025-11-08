@@ -32,7 +32,7 @@ export enum TypeOfTask {
   DeleteDocument
 }
 
-export interface ErrorResponse {
+export interface ErrorResponse extends Error{
     success: false;
     error: string;
     details?: any;
@@ -73,7 +73,9 @@ export class Response {
                 statusCode,
                 success: false,
                 error: message,
-                details
+                details,
+                name: "",
+                message: ""
             }
         };
     }

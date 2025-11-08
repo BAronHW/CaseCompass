@@ -124,7 +124,6 @@ export class DocumentService {
 
             return response;
         } catch (error) {
-            console.error('Error getting pre-signed URL:', error);
             const errorResponse = Response.createErrorResponse(
                 'Failed to generate document URL',
                 500,
