@@ -5,6 +5,10 @@ import { db } from "../lib/prismaContext.js";
 import { ChunkPDF } from "./chunkPDF.js";
 import { GoogleGenAI } from "@google/genai";
 import { getPreSignedUrl } from "../lib/getPreSignedUrl.js";
+import { join } from "path";
+import { tmpdir } from "os";
+import { unlinkSync, writeFileSync } from "fs";
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 
 export interface UploadToS3JobData {
     file: string;
@@ -21,6 +25,9 @@ export interface UploadToS3Result {
 }
 
 export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3Result> => {
+
+    const tempFilePath = join(tmpdir(), `temp_pdf_${Date.now()}.pdf`);
+    
     try {
         if (!jobData.file || !jobData.uid) {
             throw new Error('Missing required fields: file and uid are required');
@@ -44,13 +51,24 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         
         const objectUrl = await getPreSignedUrl(uniqueName);
 
+        writeFileSync(tempFilePath, buffer);
+
+        const loader = new PDFLoader(tempFilePath, {
+            splitPages: true,
+        });
+        const docs = await loader.load();
+        const pdfContent = docs.map((doc) => doc.pageContent);
+        const pdfContentString = pdfContent.join("");
+        const arrayOfChunkedDocs = await ChunkPDF(docs);
+
         const uploadedDocument = await db.document.create({
             data: {
                 key: uniqueName,
                 title: jobData.name,
                 size: jobData.size,
                 uid: jobData.uid,
-                url: objectUrl
+                url: objectUrl,
+                content: pdfContentString
             }
         });
 
@@ -58,7 +76,7 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
             throw new Error('unable to send to s3');
         }
 
-        const arrayOfChunkedDocs = await ChunkPDF(buffer);
+        
 
         const gemini = new GoogleGenAI({
             apiKey: process.env.GEMINI_KEY!,
@@ -111,5 +129,15 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
     } catch (error) {
         console.error('Error in uploadToS3:', error);
         throw error;
+    } finally {
+
+        if (tempFilePath) {
+            try {
+                unlinkSync(tempFilePath);
+            } catch (unlinkError) {
+                console.warn('Warning: Could not delete temp file:', unlinkError);
+            }
+        }
+
     }
 }
