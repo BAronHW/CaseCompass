@@ -238,51 +238,39 @@ export class TagService {
     }
 
     public async DeleteTagFromDoc(tagId: number, docId: number) {
-
         const foundTag = await db.tags.findUnique({
-            where: {
-                id: tagId
-            }
-        })
-
-        if (!foundTag) {
-            return Response.createErrorResponse(
-                'unable to find tag',
-                400
-            )
-        }
-
-        const foundDocument = await db.document.findUnique({
-            where: {
-                id: docId
-            }
-        })
-
-        if (!foundDocument) {
-            return Response.createErrorResponse(
-                'unable to find document',
-                400
-            )
-        }
-
-        const updatedDoc = await db.document.update({
-            where: {
-                id: docId
-            },
-            data: {
-                tags: {
-                    disconnect: {
-                        id: tagId
-                    }
-                }
-            }
+            where: { id: tagId }
         });
 
-        return Response.createErrorResponse(
-            'successfully deleted the tag from the doc',
-            200,
-            updatedDoc
+        if (!foundTag) {
+            throw Response.createErrorResponse(
+                'Unable to find tag',
+                404,
+                'TAG_NOT_FOUND'
+            );
+        }
 
-        );
+        try {
+            const updatedDoc = await db.document.update({
+                where: { id: docId },
+                data: {
+                    tags: {
+                        disconnect: { id: tagId }
+                    }
+                }
+            });
+
+            return Response.createSuccessResponse(
+                'Successfully deleted the tag from the document',
+                updatedDoc,
+                200
+            );
+        } catch (error) {
+            throw Response.createErrorResponse(
+                'Unable to find document',
+                404,
+                'DOCUMENT_NOT_FOUND'
+            );
+        }
     }
 }

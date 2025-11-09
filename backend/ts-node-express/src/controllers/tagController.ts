@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { TagService } from "../services/TagServices.js";
 import { Request, Response } from "express";
+import { uploadDocument } from "./documentController.js";
 
 const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
 const tagService = new TagService(genAI);
@@ -96,6 +97,34 @@ export const attachTagToDoc = async (req: Request, res: Response) => {
 
     } catch (error: any) {
         if (error.name === 'ValidationError') {
+            res.status(400).json({
+                success: false,
+                error: error.message,
+                code: 'VALIDATION_ERROR'
+            });
+            return;
+        }
+
+        if (error?.statusCode && error?.body) {
+            res.status(error.statusCode).json(error.body);
+            return;
+        }
+        res.status(500).json({ 
+            success: false,
+            error: 'Internal server error' 
+        });
+        return;
+    }
+}
+
+export const deleteTagFromDoc = async (req: Request, res: Response) => {
+    try {
+        const { tagId, docId } = req.body
+        const updatedDoc = await tagService.DeleteTagFromDoc(tagId, docId)
+        res.status(updatedDoc.statusCode).json(updatedDoc.body)
+        
+    } catch (error: any) {
+         if (error.name === 'ValidationError') {
             res.status(400).json({
                 success: false,
                 error: error.message,
