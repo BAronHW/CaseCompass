@@ -1,8 +1,9 @@
 import { GoogleGenAI } from "@google/genai"
 import { db } from "../lib/prismaContext.js"
 import { ContractTagResponse, Response, ServiceResponse } from "../models/models.js"
-import { createAgent, providerStrategy } from "langchain";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { Tag } from "@aws-sdk/client-s3";
+import { Tags } from "@prisma/client";
 
 
 export class TagService {
@@ -13,10 +14,25 @@ export class TagService {
         this.genAI = genAI
     }
 
-    public async GenerateTag(documentContent: string): Promise<ServiceResponse<string[]>> {
+    public async GenerateTag(documentId: number): Promise<ServiceResponse<Tags[]>> {
         
         const tags = await db.tags.findMany({});
         const tagTitleString = tags.map((tag) => tag.body);
+
+        const foundDoc = await db.document.findUnique({
+            where: {
+                id: documentId
+            }
+        })
+
+        if (!foundDoc) {
+            throw Response.createErrorResponse(
+                'unable to find document',
+                400
+            )
+        }
+
+        const documentContent = foundDoc.content
 
         const contractTagSchema = {
             "type": "object",
@@ -61,13 +77,23 @@ export class TagService {
 
             const result = await modelWithStructure.invoke(fullPrompt);
 
+            const createdTagPromiseArray = result.tags.map(async (tagBody) => {
+                return db.tags.upsert({
+                    where: { body: tagBody },
+                    update: {},
+                    create: { body: tagBody }
+                });
+            });
+
+            const createdTagArr = await Promise.all(createdTagPromiseArray);
+
             return Response.createSuccessResponse(
                 'Tags generated successfully',
-                result.tags,
+                createdTagArr,
                 200
             );
+
         } catch (error) {
-            console.error('Tag generation error:', error);
             throw Response.createErrorResponse(
                 'Failed to generate tags',
                 500,

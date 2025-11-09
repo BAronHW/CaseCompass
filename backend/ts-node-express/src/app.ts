@@ -3,6 +3,7 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
+import tagRoutes from './routes/tagRoutes.js';
 import 'dotenv/config.js';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -50,6 +51,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/', userRoutes);
 app.use('/api/documents/', documentRoutes);
 app.use('/api/chat/', chatRoutes);
+app.use('/api/tag', tagRoutes);
 
 app.use(errorHandler);
 

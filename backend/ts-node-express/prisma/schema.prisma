@@ -79,7 +79,6 @@ model Message {
 
 model Tags {
   id Int @id @default(autoincrement())
-  body String @default("")
-  documentId Int
-  document Document @relation(fields: [documentId], references: [id])
+  body String @default("") @unique
+  documents Document[]
 }

@@ -9,8 +9,8 @@ const tagService = new TagService(genAI);
 export const generateTag = async (req: Request, res: Response) => {
     try {
 
-        const { documentContent } = req.body;
-        const tags = await tagService.GenerateTag(documentContent);
+        const { documentId } = req.body;
+        const tags = await tagService.GenerateTag(documentId);
         res.status(tags.statusCode).json(tags.body)
 
     } catch (error: any) {
