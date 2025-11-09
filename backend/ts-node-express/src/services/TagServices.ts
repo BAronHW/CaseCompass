@@ -3,7 +3,7 @@ import { db } from "../lib/prismaContext.js"
 import { Response, ServiceResponse } from "../models/models.js"
 import { userInfo } from "os"
 
-class TagService {
+export class TagService {
 
     private genAI: GoogleGenAI
     
@@ -234,6 +234,55 @@ class TagService {
                 updatedDoc
             },
             200
+        );
+    }
+
+    public async DeleteTagFromDoc(tagId: number, docId: number) {
+
+        const foundTag = await db.tags.findUnique({
+            where: {
+                id: tagId
+            }
+        })
+
+        if (!foundTag) {
+            return Response.createErrorResponse(
+                'unable to find tag',
+                400
+            )
+        }
+
+        const foundDocument = await db.document.findUnique({
+            where: {
+                id: docId
+            }
+        })
+
+        if (!foundDocument) {
+            return Response.createErrorResponse(
+                'unable to find document',
+                400
+            )
+        }
+
+        const updatedDoc = await db.document.update({
+            where: {
+                id: docId
+            },
+            data: {
+                tags: {
+                    disconnect: {
+                        id: tagId
+                    }
+                }
+            }
+        });
+
+        return Response.createErrorResponse(
+            'successfully deleted the tag from the doc',
+            200,
+            updatedDoc
+
         );
     }
 }
