@@ -1,7 +1,9 @@
-import { GenerateContentResponse, GoogleGenAI } from "@google/genai"
+import { GoogleGenAI } from "@google/genai"
 import { db } from "../lib/prismaContext.js"
-import { Response, ServiceResponse } from "../models/models.js"
-import { userInfo } from "os"
+import { ContractTagResponse, Response, ServiceResponse } from "../models/models.js"
+import { createAgent, providerStrategy } from "langchain";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+
 
 export class TagService {
 
@@ -12,85 +14,65 @@ export class TagService {
     }
 
     public async GenerateTag(documentContent: string): Promise<ServiceResponse<string[]>> {
+        
         const tags = await db.tags.findMany({});
         const tagTitleString = tags.map((tag) => tag.body);
-        
-        const systemString = `You are an expert document classifier and tag generator. Your role is to analyze documents and generate relevant, concise tags that categorize and describe the content effectively.
 
-        ## Your Responsibilities:
-        1. **Content Analysis**: Understand the main topics, themes, and subjects in the document
-        2. **Tag Generation**: Create 3-7 relevant tags that accurately represent the document
-        3. **Tag Quality**: Ensure tags are concise (1-3 words), descriptive, and useful for search/filtering
-        4. **Consistency**: If existing tags are provided, prioritize reusing them when appropriate
-
-        ## Tag Guidelines:
-        - Use lowercase, hyphenated format (e.g., "contract-law", "real-estate")
-        - Focus on: document type, subject matter, legal area, industry, key concepts
-        - Avoid overly generic tags like "document" or "text"
-        - Prioritize specificity and searchability
-
-        ## Output Format:
-        Return ONLY a valid JSON array of tag strings. Do not include any explanation, markdown code blocks, or additional text.
-
-        Example output:
-        ["contract-law", "employment", "non-disclosure", "legal-agreement"]
-        
-        CORRECT example:
-        {
-        "tags": ["contract-law", "employment", "non-disclosure"]
-        }`;
-        
-
-            const existingTagsContext = tagTitleString && tagTitleString.length > 0 
-                ? `\n\nExisting tags in the system: ${tagTitleString.join(', ')}\nPrefer reusing these tags when appropriate.`
-                : '';
-
-            const userMessage = `Analyze this document and generate appropriate tags:
-
-        ${documentContent}${existingTagsContext}
-
-        Return only a JSON array of tags. DO NOT wrap in markdown code blocks.`;
-
-        const fullPrompt = `${systemString}\n\n${userMessage}`;
-
-        const response = await this.genAI.models.generateContent({
-            model: 'gemini-2.0-flash-001',
-            contents: fullPrompt,
-            config: {
-                temperature: 0.3,
-                maxOutputTokens: 200
-            }
-        });
-
-        const responseText = response.text;
-
-
-        if (!responseText) {
-            const errorResponse = Response.createErrorResponse(
-                'Failed to generate document URL',
-                500,
-                'URL_GENERATION_ERROR'
-            );
-            throw errorResponse;
+        const contractTagSchema = {
+            "type": "object",
+            "description": "Tag generation for legal documents",
+            "properties": {
+                "tags": {
+                    "type": "array",
+                    "description": "Relevant tags in lowercase-hyphenated format (e.g., 'employment-contract', 'non-disclosure', 'real-estate')",
+                    "items": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+                    },
+                    "minItems": 3,
+                    "maxItems": 7
+                }
+            },
+            "required": ["tags"]
         }
         
-        const cleanedText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        
+        const systemMessage = `You are an expert legal document classifier. Analyze the document and generate 3-7 relevant tags in lowercase-hyphenated format.
+
+        Focus on:
+        - Document type (e.g., employment-contract, lease-agreement, nda)
+        - Legal area (e.g., contract-law, real-estate, intellectual-property)
+        - Key clauses (e.g., confidentiality, termination, payment-terms)
+        - Industry (e.g., technology, healthcare, finance)
+
+        ${tagTitleString.length > 0 ? `\nExisting tags: ${tagTitleString.join(', ')}\nReuse when appropriate.` : ''}`;
+
+        const userMessage = `Analyze this legal document and generate tags:\n\n${documentContent}`;
+
+        const fullPrompt = `${systemMessage}\n\n${userMessage}`;
+
         try {
-            const generatedTags = JSON.parse(cleanedText) as string[];
-            const response = Response.createSuccessResponse(
-                'Login successful',
-                generatedTags,
+            const model = new ChatGoogleGenerativeAI({
+                model: "gemini-2.0-flash-001",
+                apiKey: process.env.GEMINI,
+                temperature: 0.3,
+            });
+
+            const modelWithStructure = model.withStructuredOutput<ContractTagResponse>(contractTagSchema);
+
+            const result = await modelWithStructure.invoke(fullPrompt);
+
+            return Response.createSuccessResponse(
+                'Tags generated successfully',
+                result.tags,
                 200
             );
-            return response;
         } catch (error) {
-            const errorResponse = Response.createErrorResponse(
-                'Failed to generate document URL',
+            console.error('Tag generation error:', error);
+            throw Response.createErrorResponse(
+                'Failed to generate tags',
                 500,
-                'URL_GENERATION_ERROR'
+                'TAG_GENERATION_ERROR'
             );
-            throw errorResponse;
         }
     }
 
@@ -132,8 +114,6 @@ export class TagService {
             )
 
         }
-
-        
 
     }
 

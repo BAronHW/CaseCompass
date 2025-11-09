@@ -118,3 +118,7 @@ export interface contractAnalysisBody {
     body: string,
     methodDetails: string
 }
+
+export interface ContractTagResponse {
+    tags: string[];
+}
