@@ -7,7 +7,9 @@ export class DocumentService {
 
     public async getAllDocuments(userId: number) {
         const userObj = await db.user.findUnique({
-            where: { id: userId }
+            where: { 
+                id: userId 
+            }
         });
 
         if (!userObj) {
@@ -20,7 +22,12 @@ export class DocumentService {
         }
 
         const allDocuments = await db.document.findMany({
-            where: { uid: userObj.uid }
+            include: {
+                tags: true
+            },
+            where: {
+                uid: userObj.uid 
+            }
         });
 
         if (!allDocuments || allDocuments.length === 0) {
@@ -97,8 +104,14 @@ export class DocumentService {
     }
 
     public async getDocumentById(documentId: number) {
+        
         const foundDocument = await db.document.findUnique({
-            where: { id: documentId }
+            include: {
+                tags: true
+            },
+            where: { 
+                id: documentId 
+            }
         });
 
         if (!foundDocument) {
