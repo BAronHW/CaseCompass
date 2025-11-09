@@ -96,55 +96,72 @@ export class TagService {
 
     public async EditTag(tagString: string, tagId: number) {
 
-        const updatedTag = await db.tags.update({
-            where: {
-                id: tagId,
-            }, 
-            data: {
-                body: tagString
-            }
-        })
+        try {
 
-        if (!updatedTag) {
-            return Response.createErrorResponse(
+            const updatedTag = await db.tags.update({
+                where: {
+                    id: tagId,
+                }, 
+                data: {
+                    body: tagString
+                }
+            })
+
+            if (!updatedTag) {
+                throw Response.createErrorResponse(
+                    'Unable to update tag',
+                    400,
+                    `Unable to update tag with ${tagId}`
+                )
+            }
+
+            return Response.createSuccessResponse(
+                'Successfully updated tag',
+                {
+                    updatedTag
+                },
+                200
+            );
+            
+        } catch (error: any) {
+            
+            throw Response.createErrorResponse(
                 'Unable to update tag',
                 400,
                 `Unable to update tag with ${tagId}`
             )
+
         }
 
-        return Response.createSuccessResponse(
-            'Successfully updated tag',
-            {
-                updatedTag
-            },
-            200
-        );
+        
 
     }
 
     public async DeleteTag(tagId: number) {
+    try {
         const deletedTag = await db.tags.delete({
             where: {
                 id: tagId
             }
-        })
+        });
 
-        if (!deletedTag) {
-            return Response.createErrorResponse(
-                'Unable to delete tag',
-                400,
-                `Unable to delete tag with ${tagId}`
-            )
-        }
         return Response.createSuccessResponse(
-            'Sucessfully deleted tag', 
+            'Successfully deleted tag', 
             {
                 deletedTagId: deletedTag.id
             },
             200
-        )
+        );
+    } catch (error) {
+
+        throw Response.createErrorResponse(
+            'Unable to delete tag',
+            404,
+            'TAG_NOT_FOUND'
+        );
+
     }
+}
 
     public async GetTag(tagId: number) {
         const foundTag = await db.tags.findUnique({
