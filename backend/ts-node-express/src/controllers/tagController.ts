@@ -1,7 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { TagService } from "../services/TagServices.js";
 import { Request, Response } from "express";
-import { uploadDocument } from "./documentController.js";
 
 const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
 const tagService = new TagService(genAI);
@@ -216,4 +215,3 @@ export const editTag = async (req: Request, res: Response) => {
     }
 
 }
-
