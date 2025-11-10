@@ -85,22 +85,18 @@ ChunkToEmbeddingsWorker.on('failed', (job, err) => {
 });
 
 
-
 export const startTaskWorker = (typeOfTask: TypeOfTask) => {
 
     switch(typeOfTask){
 
         case TypeOfTask.DocumentUpload:
             return uploadDocumentTaskWorker;
-            break;
         
         case TypeOfTask.ChunkDocument:
             return ChunkDocumentTaskWorker;
-            break;
 
         case TypeOfTask.ConvertChunkToEmbedding:
             return ChunkDocumentTaskWorker;
-            break;
 
         case TypeOfTask.DeleteDocument:
             return DeleteDocumentTaskWorker;

@@ -21,6 +21,8 @@ model Document {
   documentChunks   documentChunks[]
   documentComments documentComments?
   accountTemplate  accountTemplate[] @relation("DocumentToaccountTemplate")
+  documentAnalysis 
+  tags Tags[]
 }
 
 model documentComments {
@@ -39,10 +41,10 @@ model accountTemplate {
 }
 
 model User {
-  id              Int               @id @default(autoincrement())
-  name            String            @db.VarChar(255)
-  email           String            @unique @db.VarChar(255)
-  uid             String            @unique @db.VarChar(255)
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(255)
+  email           String           @unique @db.VarChar(255)
+  uid             String           @unique @db.VarChar(255)
   password        String
   refreshToken    String
   Chat            Chat?
@@ -76,9 +78,8 @@ model Message {
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
 }
 
-// model Tags {
-//   id Int @id @default(autoincrement())
-//   body String @default("")
-//   documentId Int
-//   document Document @relation(fields: [documentId], references: [id])
-// }
+model Tags {
+  id Int @id @default(autoincrement())
+  body String @default("") @unique
+  documents Document[]
+}
