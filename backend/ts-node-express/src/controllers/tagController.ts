@@ -38,8 +38,9 @@ export const generateTag = async (req: Request, res: Response) => {
 export const getTag = async (req: Request, res: Response) => {
     try {
 
-        const { tagId } = req.body
-        const tag = await tagService.GetTag(tagId)
+        const { tagId } = req.params
+        const tagIdNumber = parseInt(tagId)
+        const tag = await tagService.GetTag(tagIdNumber)
         res.status(tag.statusCode).json(tag.body);
 
     } catch (error: any) {
