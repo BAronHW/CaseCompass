@@ -21,7 +21,6 @@ model Document {
   documentChunks   documentChunks[]
   documentComments documentComments?
   accountTemplate  accountTemplate[] @relation("DocumentToaccountTemplate")
-  documentAnalysis 
   tags Tags[]
 }
 

@@ -109,8 +109,8 @@ export function websocketService() {
             })
 
             io.to(roomId).emit('new-llm-response', {
-            message: 'New Llm Message sent successfully',
-            newLlmMessage: newLlmResponse
+                message: 'New Llm Message sent successfully',
+                newLlmMessage: newLlmResponse
             })
             
             return;
