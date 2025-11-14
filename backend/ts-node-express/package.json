@@ -68,6 +68,7 @@
     "multer": "^2.0.2",
     "openai": "^4.101.0",
     "pdf-parse": "^1.1.1",
+    "pdf2pic": "^3.2.0",
     "pgvector": "^0.2.1",
     "socket.io": "^4.8.1",
     "tesseract.js": "^6.0.1",

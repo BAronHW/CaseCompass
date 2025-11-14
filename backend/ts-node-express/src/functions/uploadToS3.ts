@@ -9,6 +9,8 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { unlinkSync, writeFileSync } from "fs";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { createWorker } from "tesseract.js"
+import { fromPath } from "pdf2pic";
 
 export interface UploadToS3JobData {
     file: string;
@@ -27,6 +29,7 @@ export interface UploadToS3Result {
 export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3Result> => {
 
     const tempFilePath = join(tmpdir(), `temp_pdf_${Date.now()}.pdf`);
+    const tempPngFilePath = join(tmpdir(), `temp_png_${Date.now()}.png`)
     
     try {
         if (!jobData.file || !jobData.uid) {
@@ -48,8 +51,15 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         const sentDocument = await s3.send(command);
         
         const objectUrl = await getPreSignedUrl(uniqueName);
+        
 
         writeFileSync(tempFilePath, buffer);
+        writeFileSync(tempPngFilePath, buffer, { encoding: "base64" });
+
+        const worker = await createWorker('eng')
+        const ret = await worker.recognize(tempPngFilePath);
+        console.log(ret.data.text);
+        await worker.terminate();
 
         const loader = new PDFLoader(tempFilePath, {
             splitPages: true,
@@ -136,6 +146,7 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         if (tempFilePath) {
             try {
                 unlinkSync(tempFilePath);
+                unlinkSync(tempPngFilePath);
             } catch (unlinkError) {
                 console.warn('Warning: Could not delete temp file:', unlinkError);
             }
