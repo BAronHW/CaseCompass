@@ -6,6 +6,31 @@ import { chunkRetrieval } from "../../functions/chunkRetrieval.js";
 import { HydeService } from "../../services/HydeService.js";
 import { HydeConfig } from "../../models/models.js";
 
+async function authenticateSocket(socket: any, token: string) {
+    try {
+        const decodedJWT = await decodeJWT(token);
+        if (decodedJWT.exp && decodedJWT.exp < Date.now() / 1000) {
+            throw new Error('Token expired');
+        }
+
+        const user = await db.user.findUnique({
+            where: { id: decodedJWT.userForToken.id }
+        });
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        return {
+            userId: user.id,
+            user: user
+        };
+
+    } catch (error) {
+        throw new Error('Authentication failed');
+    }
+}
+
 export function websocketService() {
     io.on('connection', (socket) => {
 

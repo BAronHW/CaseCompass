@@ -167,9 +167,39 @@ export const analyzeContract = async (req: Request, res: Response) => {
     }
 }
 
-// export const deleteDocument = (req: Request, res: Response, next: NextFunction) => {
+export const deleteDocument = async (req: Request, res: Response, next: NextFunction) => {
 
-// }
+    try {
+
+        const { documentId } = req.params;
+        const docId = parseInt(documentId);
+        const docService = new DocumentService();
+        const response = await docService.deleteDocument(docId)
+        res.status(response.statusCode).json(response.body)
+
+    } catch (error: any) {
+        console.log(error)
+        if (error.name === 'ValidationError') {
+            res.status(400).json({
+                success: false,
+                error: error.message,
+                code: 'VALIDATION_ERROR'
+            });
+            return;
+        }
+
+        if (error?.statusCode && error?.body) {
+            res.status(error.statusCode).json(error.body);
+            return;
+        }
+        res.status(500).json({ 
+            success: false,
+            error: 'Internal server error' 
+        });
+        return;
+    }
+
+}
 
 // export const updateDocument = (req: Request, res: Response, next: NextFunction) => {
 

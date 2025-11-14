@@ -38,8 +38,6 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
         `http://localhost:3000/api/documents/${documentId}`, 
         requestTypeEnum.GET, 
       );
-
-      console.log(data.objectUrl)
       
       if (data && data.document.id) {
         setCurrentOpenDoc({
@@ -54,6 +52,12 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function deleteDocument(documentId: number) {
+    customFetch(`http://localhost:3000/api/documents/${documentId}`, 
+      requestTypeEnum.DELETE
+    )
   }
 
   function closeModal() {
@@ -140,6 +144,10 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
           </button>
           <button className="flex-1 px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
             Download
+          </button>
+
+          <button className="flex-1 px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors" onClick={() => deleteDocument(document.id)}>
+            Delete
           </button>
         </div>
       </div>

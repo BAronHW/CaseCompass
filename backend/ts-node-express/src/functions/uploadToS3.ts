@@ -34,9 +34,7 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         }
 
         const buffer = Buffer.from(jobData.file, 'base64');
-        
         const uniqueName = crypto.randomBytes(32).toString('hex');
-        
         const bucketName = process.env.BUCKET_NAME;
 
         const params = {
@@ -106,18 +104,22 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
             })
         );
 
-        arrayOfEmbeddingsAndAssociatedChunks.map(async(embedding)=>{
-            const embeddingText = embedding!.text_chunk;
-            const embeddingValues = embedding!.embedding![0].values;
-            try{
-                await db.$executeRaw`
-                    INSERT INTO "documentChunks" (content, "documentId", embeddings)
-                    VALUES (${embeddingText}, ${uploadedDocument.id}, ${embeddingValues}::vector)
-                `;  
-            }catch(error){
-                console.log(error)
-            }     
-        })
+        await Promise.all(
+            arrayOfEmbeddingsAndAssociatedChunks
+                .filter(embedding => embedding !== null)
+                .map(async(embedding) => {
+                    const embeddingText = embedding.text_chunk;
+                    const embeddingValues = embedding.embedding![0].values;
+                    try {
+                        await db.$executeRaw`
+                            INSERT INTO "documentChunks" (content, "documentId", embeddings)
+                            VALUES (${embeddingText}, ${uploadedDocument.id}, ${embeddingValues}::vector)
+                        `;  
+                    } catch(error) {
+                        throw error;
+                    }     
+                })
+            );
 
 
         return {

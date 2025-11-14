@@ -2,6 +2,8 @@ import { db } from "../lib/prismaContext.js";
 import { jobQueue } from "../lib/bullMQContext.js";
 import { getPreSignedUrl } from "../lib/getPreSignedUrl.js";
 import { Response } from "../models/models.js";
+import { s3 } from "../lib/s3Context.js";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 export class DocumentService {
 
@@ -143,6 +145,55 @@ export class DocumentService {
                 'URL_GENERATION_ERROR'
             );
             throw errorResponse;
+        }
+    }
+
+    public async deleteDocument(docId: number) {
+        try {
+
+            const foundDocument = await db.document.findUnique({
+                where: {
+                    id: docId
+                }
+            })
+
+            if (!foundDocument) {
+                const errorResponse = Response.createErrorResponse(
+                    'Cant find document',
+                    400,
+                    'DOCUMENT_ERROR'
+                );
+                throw errorResponse;
+            }
+
+            const bucketName = process.env.BUCKET_NAME;
+            const bucketParams = { Bucket: bucketName, Key: foundDocument.key };
+            const data = await s3.send(new DeleteObjectCommand(bucketParams))
+            const documentToDelete = await db.document.delete({
+                where: {
+                    id: docId
+                }
+            })
+
+            const response = Response.createSuccessResponse(
+                'Document deleted successfully',
+                {
+                    document: data,
+                    documentToDelete
+                }
+            );
+
+            return response
+
+        } catch (error: any) {
+
+            const errorResponse = Response.createErrorResponse(
+                'Failed to delete document URL',
+                500,
+                'URL_GENERATION_ERROR'
+            );
+            throw errorResponse;
+            
         }
     }
 }
