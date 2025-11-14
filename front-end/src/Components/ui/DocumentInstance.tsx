@@ -12,15 +12,16 @@ interface Document {
   uid: string;
   url?: string;
   objectUrl?: string;
-  tags?: { name: string }[];
+  tags?: { body: string }[];
 }
 
 interface DocumentInstanceProps {
   document: Document;
   onDelete: (documentId: number) => void
+  onGenTag: (documentId: number, tagId: number) => void
 }
 
-function DocumentInstance({ document, onDelete }: DocumentInstanceProps) {
+function DocumentInstance({ document, onDelete, onGenTag }: DocumentInstanceProps) {
   const [currentOpenDoc, setCurrentOpenDoc] = useState<Document | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,6 +60,24 @@ function DocumentInstance({ document, onDelete }: DocumentInstanceProps) {
       requestTypeEnum.DELETE
     )
     onDelete(documentId);
+  }
+
+  async function createAndAttachTag(documentId: number) {
+    const tags = await customFetch(`http://localhost:3000/api/tag/generateTag`,
+      requestTypeEnum.POST,
+      {
+        documentId
+      }
+    )
+    const tag = tags.data[0];
+    customFetch(`http://localhost:3000/api/tag/attachTagToDoc`,
+      requestTypeEnum.POST,
+      {
+        tagId: tag.id,
+        docId: documentId
+      }
+    )
+    onGenTag(documentId, tag)
   }
 
   function closeModal() {
@@ -118,7 +137,7 @@ function DocumentInstance({ document, onDelete }: DocumentInstanceProps) {
                 key={index}
                 className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md"
               >
-                #{tag.name}
+                #{tag.body}
               </span>
             ))}
           </div>
@@ -150,6 +169,11 @@ function DocumentInstance({ document, onDelete }: DocumentInstanceProps) {
           <button className="flex-1 px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors" onClick={() => deleteDocument(document.id)}>
             Delete
           </button>
+          
+          <button className="flex-1 px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors" onClick={() => createAndAttachTag(document.id)}>
+            Generate Tag
+          </button>
+          
         </div>
       </div>
 
@@ -231,7 +255,7 @@ function DocumentInstance({ document, onDelete }: DocumentInstanceProps) {
                                 key={index}
                                 className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md"
                               >
-                                #{tag.name}
+                                #{tag.body}
                               </span>
                             ))}
                           </div>

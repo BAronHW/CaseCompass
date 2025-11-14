@@ -7,29 +7,84 @@ import { GoogleGenAI } from "@google/genai";
 import { getPreSignedUrl } from "../lib/getPreSignedUrl.js";
 import { join } from "path";
 import { tmpdir } from "os";
-import { unlinkSync, writeFileSync } from "fs";
+import { readFileSync, unlinkSync, writeFileSync } from "fs";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { createWorker } from "tesseract.js"
 import { fromPath } from "pdf2pic";
+import { PDFDocument } from "pdf-lib";
+import { OCRResult, UploadToS3JobData, UploadToS3Result } from "../models/models.js";
 
-export interface UploadToS3JobData {
-    file: string;
-    name: string;
-    size: number;
-    uid: string;
-}
+// async function extractTextWithOCR(pdfPath: string): Promise<OCRResult[]> {
+//     const tempImages: string[] = [];
+    
+//     try {
+//         const converter = fromPath(pdfPath, {
+//             density: 300,
+//             saveFilename: `page`,
+//             savePath: tmpdir(),
+//             format: 'png',
+//             width: 2000,
+//             height: 2000
+//         });
 
-export interface UploadToS3Result {
-    key: string;
-    name: string;
-    size: number;
-    uid: string;
-}
+//         const pdfBuffer = readFileSync(pdfPath);
+//         const pdfDoc = await PDFDocument.load(pdfBuffer);
+//         const pageCount = pdfDoc.getPageCount();
+
+//         console.log(`Converting ${pageCount} PDF pages to images for OCR...`);
+
+//         const ocrResults: OCRResult[] = [];
+
+//         const worker = await createWorker('eng', 1, {
+//             logger: m => {
+//                 if (m.status === 'recognizing text') {
+//                     console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
+//                 }
+//             }
+//         });
+
+//         try {
+//             for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
+//                 console.log(`Converting and processing page ${pageNum} of ${pageCount}...`);
+                
+//                 const page = await converter(pageNum, { responseType: 'image' });
+//                 tempImages.push(page.path!);
+                
+//                 console.log(`Created image: ${page.path}`);
+                
+//                 const result = await worker.recognize(page.path!);
+
+//                 ocrResults.push({
+//                     pageNumber: pageNum,
+//                     text: result.data.text,
+//                     confidence: result.data.confidence
+//                 });
+
+//                 console.log(`Page ${pageNum} OCR confidence: ${result.data.confidence.toFixed(2)}%`);
+//             }
+//         } finally {
+//             await worker.terminate();
+//         }
+
+//         return ocrResults;
+//     } catch (error) {
+//         console.error('Error in OCR processing:', error);
+//         throw error;
+//     } finally {
+//         console.log(`Cleaning up ${tempImages.length} temporary images...`);
+//         for (const imagePath of tempImages) {
+//             try {
+//                 unlinkSync(imagePath);
+//             } catch (e) {
+//                 console.warn('Could not delete temp image:', imagePath);
+//             }
+//         }
+//     }
+// }
 
 export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3Result> => {
 
     const tempFilePath = join(tmpdir(), `temp_pdf_${Date.now()}.pdf`);
-    const tempPngFilePath = join(tmpdir(), `temp_png_${Date.now()}.png`)
     
     try {
         if (!jobData.file || !jobData.uid) {
@@ -54,12 +109,12 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         
 
         writeFileSync(tempFilePath, buffer);
-        writeFileSync(tempPngFilePath, buffer, { encoding: "base64" });
+        // const ocrResults = await extractTextWithOCR(tempFilePath);
+        // const pdfOCRContentString = ocrResults
+        //     .map(result => `=== Page ${result.pageNumber} ===\n${result.text}`)
+        //     .join('\n\n');
 
-        const worker = await createWorker('eng')
-        const ret = await worker.recognize(tempPngFilePath);
-        console.log(ret.data.text);
-        await worker.terminate();
+        // console.log(pdfOCRContentString);
 
         const loader = new PDFLoader(tempFilePath, {
             splitPages: true,
@@ -146,7 +201,6 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         if (tempFilePath) {
             try {
                 unlinkSync(tempFilePath);
-                unlinkSync(tempPngFilePath);
             } catch (unlinkError) {
                 console.warn('Warning: Could not delete temp file:', unlinkError);
             }

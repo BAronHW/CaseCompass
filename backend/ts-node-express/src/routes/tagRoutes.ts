@@ -6,9 +6,9 @@ const router = Router();
 router.post('/generateTag', verifyToken , generateTag);
 router.get('/:tagId', verifyToken, getTag)
 router.get('/getAllTag', verifyToken, getAllTag);
-router.post('attachTagToDoc', verifyToken, attachTagToDoc);
-router.post('deleteTagFromDoc', verifyToken, deleteTagFromDoc);
-router.delete('deleteTag', verifyToken, deleteTag);
-router.put('editTag', verifyToken, editTag);
+router.post('/attachTagToDoc', verifyToken, attachTagToDoc);
+router.post('/deleteTagFromDoc', verifyToken, deleteTagFromDoc);
+router.delete('/deleteTag', verifyToken, deleteTag);
+router.put('/editTag', verifyToken, editTag);
 
 export default router

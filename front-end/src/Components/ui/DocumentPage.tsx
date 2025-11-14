@@ -22,6 +22,16 @@ function DocumentPage() {
     setDocuments(prev => prev.filter(doc => doc.id !== documentId));
   };
 
+  const handleTagAdded = (documentId: number, tag: { name: string }) => {
+    setDocuments(prevDocs => 
+      prevDocs.map(doc => 
+        doc.id === documentId 
+          ? { ...doc, tags: [tag] }
+          : doc
+      )
+    );
+  };
+
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
@@ -75,7 +85,7 @@ function DocumentPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {documents.length > 0 ? (
           documents.map((doc) => (
-            <DocumentInstance key={doc.id} document={doc} onDelete={handleDocumentDeleted}/>
+            <DocumentInstance key={doc.id} document={doc} onDelete={handleDocumentDeleted} onGenTag={handleTagAdded}/>
           ))
         ) : (
           <div className="col-span-full text-center text-gray-500">

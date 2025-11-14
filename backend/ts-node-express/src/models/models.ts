@@ -122,3 +122,23 @@ export interface contractAnalysisBody {
 export interface ContractTagResponse {
     tags: string[];
 }
+
+export interface UploadToS3JobData {
+    file: string;
+    name: string;
+    size: number;
+    uid: string;
+}
+
+export interface UploadToS3Result {
+    key: string;
+    name: string;
+    size: number;
+    uid: string;
+}
+
+export interface OCRResult {
+    pageNumber: number;
+    text: string;
+    confidence: number;
+}
