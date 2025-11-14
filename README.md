@@ -13,3 +13,6 @@ Dependancies:
 1. Redis for BullMQ
 2. Node.js for backend
 3. React.js for front-end
+
+
+<img width="591" height="591" alt="SystemArchCaseCompass drawio" src="https://github.com/user-attachments/assets/b6ddd1e2-877a-43a0-a9fd-5a90ac734dd8" />
