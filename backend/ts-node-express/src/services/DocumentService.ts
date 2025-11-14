@@ -187,10 +187,12 @@ export class DocumentService {
 
         } catch (error: any) {
 
+
+
             const errorResponse = Response.createErrorResponse(
                 'Failed to delete document URL',
                 500,
-                'URL_GENERATION_ERROR'
+                error
             );
             throw errorResponse;
             
