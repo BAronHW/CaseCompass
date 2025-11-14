@@ -50,34 +50,35 @@ export const getAllDocuments = async (req: Request, res: Response): Promise<void
     }
 }
 
-export const uploadDocument = async (req: Request, res: Response): Promise<void> => {
+
+export const uploadDocument = async (req: Request, res: Response) => {
     try {
-        const { name, size, file } = req.body;
-        const authToken = req.headers.authorization;
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: 'No file uploaded'
+        });
+      }
 
-        if (!authToken) {
-            res.status(401).json({ error: 'Authorization header is required' });
-            return;
-        }
+      const userId = req.user.userForToken.id;
+      console.log(userId)
+      
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Unauthorized'
+        });
+      }
 
-        const decodedAuthToken = await decodeJWT(authToken);
-        
-        if (!decodedAuthToken || !decodedAuthToken.userForToken) {
-            res.status(401).json({ error: 'Invalid or expired token' });
-            return;
-        }
+      const docService = new DocumentService();
+      const result = await docService.uploadDocument(
+        userId,
+        req.file.originalname,
+        req.file.size,
+        req.file.buffer
+      );
 
-        const userId = decodedAuthToken.userForToken.id;
-
-        const docService = new DocumentService();
-        const uploadRes = await docService.uploadDocument(
-            userId,
-            name,
-            size,
-            file
-        );
-
-        res.status(uploadRes.statusCode).json(uploadRes.body.data?.userId)
+      return res.status(200).json(result);
 
     } catch (error: any) {
         if (error.name === 'ValidationError') {
@@ -99,7 +100,7 @@ export const uploadDocument = async (req: Request, res: Response): Promise<void>
         });
         return;
     }
-};
+}
 
 export const getDocumentById = async (req: Request, res: Response, next: NextFunction) => {
     try {

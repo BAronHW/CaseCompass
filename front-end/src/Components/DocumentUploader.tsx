@@ -16,6 +16,46 @@ const DocumentUploader = () => {
     }
   };
 
+  const uploadWithProgress = (formData: FormData): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(percentComplete);
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response);
+          } catch {
+            resolve(xhr.responseText);
+          }
+        } else {
+          reject(new Error(`Upload failed with status ${xhr.status}`));
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        reject(new Error('Upload failed'));
+      });
+
+      xhr.addEventListener('abort', () => {
+        reject(new Error('Upload cancelled'));
+      });
+
+      xhr.open('POST', 'http://localhost:3000/api/documents/createDocument');
+      const authToken = sessionStorage.getItem('Authorization')
+      xhr.setRequestHeader('Authorization', `${authToken}`);
+      
+      xhr.send(formData);
+    });
+  };
+
   const uploadDocument = async () => {
     if (!file) {
       setUploadStatus({ status: false, message: 'Please select a file first' });
@@ -27,27 +67,12 @@ const DocumentUploader = () => {
     setUploadStatus(null);
 
     try {
-      const base64File = await toBase64(file);
-      
-      const payload = {
-        name: file.name,
-        size: file.size,
-        file: base64File.split(',')[1]
-      };
-
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          const newProgress = prev + 5;
-          if (newProgress >= 95) {
-            clearInterval(progressInterval);
-            return 95;
-          }
-          return newProgress;
-        });
-      }, 100);
-
-      await customFetch('http://localhost:3000/api/documents/createDocument', requestTypeEnum.POST, payload)
-      clearInterval(progressInterval);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('name', file.name);
+      formData.append('size', file.size.toString());
+      await uploadWithProgress(formData);
+      setUploadProgress(100);
       setUploadStatus({status: true, message: 'Sucessfully uploaded document'})
     } catch (error) {
       console.log(error)
@@ -56,13 +81,6 @@ const DocumentUploader = () => {
       setUploading(false);
     }
   };
-
-  const toBase64 = (file: Blob): Promise<string> => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
-  });
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md m-10">

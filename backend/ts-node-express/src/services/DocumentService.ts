@@ -53,7 +53,7 @@ export class DocumentService {
         userId: number,
         name: string,
         size: number,
-        file: string
+        fileBuffer: Buffer
     ) {
         const user = await db.user.findUnique({
             where: { id: userId }
@@ -74,7 +74,7 @@ export class DocumentService {
                 {
                     name,
                     size,
-                    file,
+                    file: fileBuffer.toString('base64'),
                     uid: user.uid
                 },
                 {
