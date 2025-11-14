@@ -186,16 +186,12 @@ export class DocumentService {
             return response
 
         } catch (error: any) {
-
-
-
             const errorResponse = Response.createErrorResponse(
                 'Failed to delete document URL',
                 500,
                 error
             );
             throw errorResponse;
-            
         }
     }
 }

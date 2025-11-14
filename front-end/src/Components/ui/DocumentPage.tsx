@@ -17,6 +17,10 @@ function DocumentPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const handleDocumentDeleted = (documentId: number) => {
+    setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+  };
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -71,7 +75,7 @@ function DocumentPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {documents.length > 0 ? (
           documents.map((doc) => (
-            <DocumentInstance key={doc.id} document={doc} />
+            <DocumentInstance key={doc.id} document={doc} onDelete={handleDocumentDeleted}/>
           ))
         ) : (
           <div className="col-span-full text-center text-gray-500">

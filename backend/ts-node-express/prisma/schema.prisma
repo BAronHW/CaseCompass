@@ -56,7 +56,7 @@ model documentChunks {
   embeddings Unsupported("vector")?
   documentId Int
   content    String                 @default("")
-  Document   Document               @relation(fields: [documentId], references: [id])
+  Document   Document               @relation(fields: [documentId], references: [id], onDelete: Cascade)
 }
 
 model Chat {

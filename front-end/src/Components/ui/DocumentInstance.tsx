@@ -17,9 +17,10 @@ interface Document {
 
 interface DocumentInstanceProps {
   document: Document;
+  onDelete: (documentId: number) => void
 }
 
-function DocumentInstance({ document }: DocumentInstanceProps) {
+function DocumentInstance({ document, onDelete }: DocumentInstanceProps) {
   const [currentOpenDoc, setCurrentOpenDoc] = useState<Document | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +46,6 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
           objectUrl: data.objectUrl
         });
         setIsModalOpen(true);
-        console.log(currentOpenDoc)
       }
     } catch (err) {
       console.error('Error fetching document:', err);
@@ -58,6 +58,7 @@ function DocumentInstance({ document }: DocumentInstanceProps) {
     customFetch(`http://localhost:3000/api/documents/${documentId}`, 
       requestTypeEnum.DELETE
     )
+    onDelete(documentId);
   }
 
   function closeModal() {
