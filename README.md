@@ -17,5 +17,5 @@ Dependancies:
 
 <img width="591" height="591" alt="SystemArchCaseCompass drawio" src="https://github.com/user-attachments/assets/b6ddd1e2-877a-43a0-a9fd-5a90ac734dd8" />
 
-TODO:
-1. change the pdf upload to use formData
+<img width="1919" height="833" alt="image" src="https://github.com/user-attachments/assets/a32c5be4-9dbc-403d-941f-6bbfa5312366" />
+
