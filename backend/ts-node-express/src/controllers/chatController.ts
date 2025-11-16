@@ -5,7 +5,7 @@ import { determineIfQuestion } from "../lib/questionDetermine.js";
 
 export const createNewChat = async (req: Request, res: Response) => {
     try {
-        const authToken = req.headers.authorization;
+        const authToken = req.cookies.Authorization;
     
         if (!authToken) {
             res.status(401).json({ error: 'Authorization header is required' });
@@ -49,7 +49,7 @@ export const pushToChat = async (req: Request, res: Response) => {
     // need to write a module to determine if the message sent is a question or not if it is then 
     // do the rag vector search
     try {
-        const authToken = req.headers.authorization;
+        const authToken = req.cookies.Authorization;
         const { body } = req.body;
         
         if (!authToken) {
@@ -124,7 +124,7 @@ export const pushToChat = async (req: Request, res: Response) => {
 
 export const deleteChat = async (req: Request, res: Response) => {
     try {
-        const authToken = req.headers.authorization;
+        const authToken = req.cookies.Authorization;
         
         if (!authToken) {
             res.status(401).json({ error: 'Authorization header is required' });
@@ -181,7 +181,7 @@ export const deleteChat = async (req: Request, res: Response) => {
 
 export const getAllChats = async (req: Request, res: Response) => {
     try {
-        const authToken = req.headers.authorization;
+        const authToken = req.cookies.Authorization;
 
         if (!authToken) {
             res.status(401).json({ error: 'Authorization header is required' });

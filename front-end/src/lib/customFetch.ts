@@ -5,6 +5,8 @@ import { requestTypeEnum } from "../interfacesEnumsAndTypes/enums";
 
 export const customFetch = async (url: string, requestType: requestTypeEnum, body?: Record<string, unknown>) => {
 
+    console.log(body)
+
     try{
 
         const serializedRequestType = () : string | Error => {
@@ -30,21 +32,12 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, bod
 
         const method = serializedRequestType().toString()
 
-        const accessToken = sessionStorage.getItem('Authorization')
-
-        const headerWithToken = {
-            "Content-Type": "application/json",
-            "Authorization": `${accessToken}`,
-        }
-
-        const headerNoToken = {
-            "Content-Type": "application/json",
-        }
-
         const options : RequestInit = {
             method: method,
-            headers: accessToken !== undefined ? headerWithToken : headerNoToken,
-            credentials: 'include'
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         }
 
         if(method !== 'GET' && body){
@@ -63,9 +56,6 @@ export const customFetch = async (url: string, requestType: requestTypeEnum, bod
                 })
                 
                 const respJson = await response.json();
-                if(response.ok) {
-                    sessionStorage.setItem("Authorization", respJson.newAccessToken);
-                }
 
                 const retryCount = 3;
                 let currentCount = 0;

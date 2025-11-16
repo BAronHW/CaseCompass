@@ -63,6 +63,7 @@ function DocumentInstance({ document, onDelete, onGenTag }: DocumentInstanceProp
   }
 
   async function createAndAttachTag(documentId: number) {
+    console.log(documentId)
     const tags = await customFetch(`http://localhost:3000/api/tag/generateTag`,
       requestTypeEnum.POST,
       {
@@ -137,7 +138,7 @@ function DocumentInstance({ document, onDelete, onGenTag }: DocumentInstanceProp
                 key={index}
                 className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-md"
               >
-                #{tag.body}
+                {tag.body}
               </span>
             ))}
           </div>

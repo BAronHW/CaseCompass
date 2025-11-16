@@ -75,21 +75,20 @@ export const loginUser = async (req: Request, res: Response) => {
         }
 
         const { accessToken, refreshToken } = response.body.data;
-
+        
         res
             .cookie('refreshToken', refreshToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                secure: false,
+                sameSite: 'lax',
                 maxAge: 24 * 60 * 60 * 1000
             })
             .cookie('Authorization', accessToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                secure: false,
+                sameSite: 'lax',
                 maxAge: 60 * 60 * 1000
             })
-            .header('Authorization', accessToken)
             .status(response.statusCode)
             .json(response.body);
         return;

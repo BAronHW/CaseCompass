@@ -3,8 +3,7 @@ import jwt from "jsonwebtoken";
 import 'dotenv/config.js';
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
-    // make this use the cookies and not the header for token retrieval
-    const authHeader = req.headers.authorization;
+    const authHeader = req.cookies.Authorization;
 
     if (!authHeader || authHeader == undefined) {
         res.json({ redirectAddr:'http://localhost:5173/login' })

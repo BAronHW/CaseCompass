@@ -49,8 +49,7 @@ const DocumentUploader = () => {
       });
 
       xhr.open('POST', 'http://localhost:3000/api/documents/createDocument');
-      const authToken = sessionStorage.getItem('Authorization')
-      xhr.setRequestHeader('Authorization', `${authToken}`);
+      xhr.withCredentials = true;
       
       xhr.send(formData);
     });

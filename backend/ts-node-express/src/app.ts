@@ -27,17 +27,11 @@ const io = new Server(server, {
 });
 
 app.set('trust proxy', 1)
-app.use(cookieSession({
-  secret: process.env.SESSION_SECRET!,
-  maxAge: 24 * 60 * 60 * 1000,
-  secure: false,
-  httpOnly: true
-}));
 
 app.use(cors({
     origin: 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type'],
     exposedHeaders: ['x-new-token'],
     credentials: true
   }));

@@ -5,11 +5,7 @@
  */
 
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
-import { join } from "path";
-import { tmpdir } from "os";
 import { Document } from "@langchain/core/documents";
-import { unlinkSync, writeFileSync } from "fs";
 
 export async function ChunkPDF(docs: Document<Record<string, any>>[]): Promise<Document[]> {
     try {
