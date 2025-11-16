@@ -5,8 +5,6 @@ import { requestTypeEnum } from "../interfacesEnumsAndTypes/enums";
 
 export const customFetch = async (url: string, requestType: requestTypeEnum, body?: Record<string, unknown>) => {
 
-    console.log(body)
-
     try{
 
         const serializedRequestType = () : string | Error => {
