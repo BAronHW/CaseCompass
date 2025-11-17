@@ -149,12 +149,12 @@ export function websocketService() {
 
         const fakeDoc = await hydeService.generateHypotheticalDocument(messageBody, hydeConfig);
 
-        const relevantChunks = await chunkRetrieval(1, fakeDoc, genAI)
+        const relevantChunks = await chunkRetrieval(5, fakeDoc, genAI)
 
         const generateLlmmResponse = async (messageBody: string): Promise<GenerateContentResponse> => {
             const response = await genAI.models.generateContent({
                 model: 'gemini-2.0-flash-001',
-                contents: `Given this user question ${messageBody} and this retrieved documentChunk ${relevantChunks[0].content}
+                contents: `Given this user question ${messageBody} and this retrieved documentChunk ${relevantChunks.map(chunk => chunk.content)}.
                         can you give an answer to the users original question which was: ${messageBody} DON'T MENTION CHUNKS IN YOUR ANSWER IN REGARDS TO DOCUMENTCHUNKS`,
             });
             return response;
