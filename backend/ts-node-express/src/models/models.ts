@@ -142,3 +142,7 @@ export interface OCRResult {
     text: string;
     confidence: number;
 }
+
+export interface SentenceMap {
+  [key: number]: string;
+}

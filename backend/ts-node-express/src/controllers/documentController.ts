@@ -6,7 +6,7 @@ import { GoogleGenAI } from "@google/genai";
 
 export const getAllDocuments = async (req: Request, res: Response): Promise<void> => {
     try{
-        // switch to services and also need to use requestContext here
+        
         const authToken = req.cookies.Authorization;
 
         if (!authToken) {

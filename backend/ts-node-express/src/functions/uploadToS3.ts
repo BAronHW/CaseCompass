@@ -109,12 +109,6 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         
 
         writeFileSync(tempFilePath, buffer);
-        // const ocrResults = await extractTextWithOCR(tempFilePath);
-        // const pdfOCRContentString = ocrResults
-        //     .map(result => `=== Page ${result.pageNumber} ===\n${result.text}`)
-        //     .join('\n\n');
-
-        // console.log(pdfOCRContentString);
 
         const loader = new PDFLoader(tempFilePath, {
             splitPages: true,
