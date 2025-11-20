@@ -13,6 +13,7 @@ import { createWorker } from "tesseract.js"
 import { fromPath } from "pdf2pic";
 import { PDFDocument } from "pdf-lib";
 import { OCRResult, UploadToS3JobData, UploadToS3Result } from "../models/models.js";
+import { semanticChunker } from "./semanticChunker.js";
 
 // async function extractTextWithOCR(pdfPath: string): Promise<OCRResult[]> {
 //     const tempImages: string[] = [];
@@ -116,6 +117,7 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         const docs = await loader.load();
         const pdfContent = docs.map((doc) => doc.pageContent);
         const pdfContentString = pdfContent.join("");
+        const res = semanticChunker(pdfContentString);
         const arrayOfChunkedDocs = await ChunkPDF(docs);
 
         const uploadedDocument = await db.document.create({
@@ -133,33 +135,31 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
             throw new Error('unable to send to s3');
         }
 
-        
-
         const gemini = new GoogleGenAI({
             apiKey: process.env.GEMINI_KEY!,
         })
 
         const arrayOfEmbeddingsAndAssociatedChunks = await Promise.all(
             arrayOfChunkedDocs.map(async (chunk, index) => {
-            try {
-                const result = await gemini.models.embedContent({
-                    model: 'text-embedding-004',
-                    contents: [{
-                        parts: [{ text: chunk.pageContent }]
-                    }],
-                    config: {
-                        taskType: "SEMANTIC_SIMILARITY",
+                try {
+                    const result = await gemini.models.embedContent({
+                        model: 'text-embedding-004',
+                        contents: [{
+                            parts: [{ text: chunk.pageContent }]
+                        }],
+                        config: {
+                            taskType: "SEMANTIC_SIMILARITY",
+                        }
+                    });
+                    return {
+                        text_chunk: chunk.pageContent,
+                        embedding: result.embeddings
                     }
-                });
-                return {
-                    text_chunk: chunk.pageContent,
-                    embedding: result.embeddings
+                    
+                } catch (error) {
+                    console.error(`Error generating embedding for chunk ${index}:`, error);
+                    return null;
                 }
-                
-            } catch (error) {
-                console.error(`Error generating embedding for chunk ${index}:`, error);
-                return null;
-            }
             })
         );
 
