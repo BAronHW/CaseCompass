@@ -63,7 +63,6 @@ function DocumentInstance({ document, onDelete, onGenTag }: DocumentInstanceProp
   }
 
   async function createAndAttachTag(documentId: number) {
-    console.log(documentId)
     const tags = await customFetch(`http://localhost:3000/api/tag/generateTag`,
       requestTypeEnum.POST,
       {
@@ -95,7 +94,6 @@ function DocumentInstance({ document, onDelete, onGenTag }: DocumentInstanceProp
     const worker = await createWorker('eng');
     if (currentOpenDoc?.objectUrl) {
       const ret = await worker.recognize(currentOpenDoc?.objectUrl);
-      console.log(ret.data.text);
       await worker.terminate();
     }
   })();

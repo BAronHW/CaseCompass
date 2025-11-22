@@ -35,9 +35,6 @@ function DocumentPage() {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const accessToken = sessionStorage.getItem('Authorization');
-        console.log('Access token exists:', !!accessToken);
-        
         const data = await customFetch(
           'http://localhost:3000/api/documents/', 
           requestTypeEnum.GET, 

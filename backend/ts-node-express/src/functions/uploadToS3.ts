@@ -7,81 +7,9 @@ import { GoogleGenAI } from "@google/genai";
 import { getPreSignedUrl } from "../lib/getPreSignedUrl.js";
 import { join } from "path";
 import { tmpdir } from "os";
-import { readFileSync, unlinkSync, writeFileSync } from "fs";
+import { unlinkSync, writeFileSync } from "fs";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
-import { createWorker } from "tesseract.js"
-import { fromPath } from "pdf2pic";
-import { PDFDocument } from "pdf-lib";
-import { OCRResult, UploadToS3JobData, UploadToS3Result } from "../models/models.js";
-import { semanticChunker } from "./semanticChunker.js";
-
-// async function extractTextWithOCR(pdfPath: string): Promise<OCRResult[]> {
-//     const tempImages: string[] = [];
-    
-//     try {
-//         const converter = fromPath(pdfPath, {
-//             density: 300,
-//             saveFilename: `page`,
-//             savePath: tmpdir(),
-//             format: 'png',
-//             width: 2000,
-//             height: 2000
-//         });
-
-//         const pdfBuffer = readFileSync(pdfPath);
-//         const pdfDoc = await PDFDocument.load(pdfBuffer);
-//         const pageCount = pdfDoc.getPageCount();
-
-//         console.log(`Converting ${pageCount} PDF pages to images for OCR...`);
-
-//         const ocrResults: OCRResult[] = [];
-
-//         const worker = await createWorker('eng', 1, {
-//             logger: m => {
-//                 if (m.status === 'recognizing text') {
-//                     console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
-//                 }
-//             }
-//         });
-
-//         try {
-//             for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
-//                 console.log(`Converting and processing page ${pageNum} of ${pageCount}...`);
-                
-//                 const page = await converter(pageNum, { responseType: 'image' });
-//                 tempImages.push(page.path!);
-                
-//                 console.log(`Created image: ${page.path}`);
-                
-//                 const result = await worker.recognize(page.path!);
-
-//                 ocrResults.push({
-//                     pageNumber: pageNum,
-//                     text: result.data.text,
-//                     confidence: result.data.confidence
-//                 });
-
-//                 console.log(`Page ${pageNum} OCR confidence: ${result.data.confidence.toFixed(2)}%`);
-//             }
-//         } finally {
-//             await worker.terminate();
-//         }
-
-//         return ocrResults;
-//     } catch (error) {
-//         console.error('Error in OCR processing:', error);
-//         throw error;
-//     } finally {
-//         console.log(`Cleaning up ${tempImages.length} temporary images...`);
-//         for (const imagePath of tempImages) {
-//             try {
-//                 unlinkSync(imagePath);
-//             } catch (e) {
-//                 console.warn('Could not delete temp image:', imagePath);
-//             }
-//         }
-//     }
-// }
+import { UploadToS3JobData, UploadToS3Result } from "../models/models.js";
 
 export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3Result> => {
 
@@ -117,7 +45,6 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         const docs = await loader.load();
         const pdfContent = docs.map((doc) => doc.pageContent);
         const pdfContentString = pdfContent.join("");
-        const res = await semanticChunker(pdfContentString);
         const arrayOfChunkedDocs = await ChunkPDF(docs);
 
         const uploadedDocument = await db.document.create({
@@ -140,19 +67,19 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         })
 
         const arrayOfEmbeddingsAndAssociatedChunks = await Promise.all(
-            res.chunks.map(async (chunk, index) => {
+            arrayOfChunkedDocs.map(async (chunk, index) => {
                 try {
                     const result = await gemini.models.embedContent({
                         model: 'text-embedding-004',
                         contents: [{
-                            parts: [{ text: chunk }]
+                            parts: [{ text: chunk.pageContent }]
                         }],
                         config: {
                             taskType: "SEMANTIC_SIMILARITY",
                         }
                     });
                     return {
-                        text_chunk: chunk,
+                        text_chunk: chunk.pageContent,
                         embedding: result.embeddings
                     }
                     

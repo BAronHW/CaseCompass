@@ -77,7 +77,6 @@ export default function ChatPage() {
 
     const handleChatCreated = ({ message, chatRoom }: ChatRoomCreateStruct) => {
       setChatRoom(chatRoom);
-      console.log(message, "chat-created message");
     };
 
     const handleNewHumanMessage = ({ newMessage }: NewHumanMessagePayload) => {
@@ -103,7 +102,6 @@ export default function ChatPage() {
     const getExistingMessages = async () => {
       try {
         const response = await customFetch('http://localhost:3000/api/chat', requestTypeEnum.GET);
-        console.log(response);
         if (response.messages && Array.isArray(response.messages)) {
           setMessages(response.messages);
         }

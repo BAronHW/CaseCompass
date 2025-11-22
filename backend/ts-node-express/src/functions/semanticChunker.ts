@@ -119,7 +119,7 @@ const calculateCosineDistanceAndStore = (sentenceArr: Sentence[]): DistanceResul
   }, { sentences: [], distances: [] });
 };
 
-const chunkByThreshold = (distanceResult: DistanceResult, chosenThreshold = 95) => {
+const chunkByThreshold = async (distanceResult: DistanceResult, chosenThreshold = 95) => {
   const breakpointDistanceThreshold = percentile(distanceResult.distances, chosenThreshold);
   
   const indicesAboveThreshold = distanceResult.sentences
