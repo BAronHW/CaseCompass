@@ -117,7 +117,7 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         const docs = await loader.load();
         const pdfContent = docs.map((doc) => doc.pageContent);
         const pdfContentString = pdfContent.join("");
-        const res = semanticChunker(pdfContentString);
+        const res = await semanticChunker(pdfContentString);
         const arrayOfChunkedDocs = await ChunkPDF(docs);
 
         const uploadedDocument = await db.document.create({
@@ -140,19 +140,19 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
         })
 
         const arrayOfEmbeddingsAndAssociatedChunks = await Promise.all(
-            arrayOfChunkedDocs.map(async (chunk, index) => {
+            res.chunks.map(async (chunk, index) => {
                 try {
                     const result = await gemini.models.embedContent({
                         model: 'text-embedding-004',
                         contents: [{
-                            parts: [{ text: chunk.pageContent }]
+                            parts: [{ text: chunk }]
                         }],
                         config: {
                             taskType: "SEMANTIC_SIMILARITY",
                         }
                     });
                     return {
-                        text_chunk: chunk.pageContent,
+                        text_chunk: chunk,
                         embedding: result.embeddings
                     }
                     

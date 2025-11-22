@@ -43,8 +43,8 @@ export const semanticChunker = async (content: string) => {
     const combinedSentences = combineSentences(sentencesArr);
     const sentenceEmbeddings: Sentence[] = await embedSentences(combinedSentences);
     const store = calculateCosineDistanceAndStore(sentenceEmbeddings);
-    chunkByThreshold(store)
-
+    const res = chunkByThreshold(store);
+    return res
 }
 
 const sentencesArrToHashMap = (sentencesArr: string[]): SentenceMap => {
@@ -120,14 +120,42 @@ const calculateCosineDistanceAndStore = (sentenceArr: Sentence[]): DistanceResul
 };
 
 const chunkByThreshold = (distanceResult: DistanceResult, chosenThreshold = 95) => {
-  const breakpointDistanceThreshold = percentile(distanceResult.sentences.flatMap((sentence)=>sentence.combined_sentence_embedding), chosenThreshold);
-  const aboveThreshold = distanceResult.sentences.filter((sentence) => {
-    return sentence.distance_to_next > breakpointDistanceThreshold
-  })
+  const breakpointDistanceThreshold = percentile(distanceResult.distances, chosenThreshold);
   
-  
+  const indicesAboveThreshold = distanceResult.sentences
+    .map((sentence) => {
+      if (sentence.distance_to_next && sentence.distance_to_next > breakpointDistanceThreshold) {
+        return sentence.index;
+      }
+      return null;
+    })
+    .filter((index): index is number => index !== null);
 
-}
+  const chunks: string[] = [];
+  // find a way to do this in a functional way
+  let startIndex = 0;
+
+  indicesAboveThreshold.forEach(breakpointIndex => {
+    const group = distanceResult.sentences.slice(startIndex, breakpointIndex + 1);
+    const combinedText = group.map(s => s.sentence).join(' ');
+    chunks.push(combinedText);
+    startIndex = breakpointIndex + 1;
+  });
+
+  if (startIndex < distanceResult.sentences.length) {
+    const combinedText = distanceResult.sentences
+      .slice(startIndex)
+      .map(s => s.sentence)
+      .join(' ');
+    chunks.push(combinedText);
+  }
+
+  return {
+    chunks,
+    indicesAboveThreshold,
+    breakpointDistanceThreshold
+  };
+};
 
 const percentile = (arr: number[], p: number): number => {
   const sorted = [...arr].sort((a, b) => a - b);
