@@ -1,16 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { SentenceMap } from "../models/models.js";
 
-/**
- * Final structure:
- * {
- *    sentence: string
- *    index: number
- *    combined_sentence: string
- *    combined_sentence_embedding: number[]
- * }
- */
-
 interface SentenceNoEmbedding {
   sentence: string;
   index: number;
@@ -36,6 +26,23 @@ interface DistanceResult {
 const gemini = new GoogleGenAI({
   apiKey: process.env.GEMINI_KEY!,
 })
+
+/**
+ * 
+ * 1. Split text into sentences
+ * 2. Convert to hashmap (index → sentence)
+ * 3. Combine each sentence with neighbors (buffer window)
+ * 4. Embed combined sentences into vectors
+ * 5. Calculate cosine distance between consecutive embeddings
+ * 6. Store all distances in an array
+ * 7. Find 95th percentile threshold (identifies top 5% largest jumps)
+ * 8. Get indices where distance > threshold (semantic breakpoints)
+ * 9. Split sentences at breakpoint indices to create chunks
+ * 10. Join sentences within each chunk into final text chunks
+ * 11. Return chunks with metadata (indices, threshold)
+ * 
+ * Result: Text split at natural topic boundaries instead of arbitrary lengths
+ */
 
 
 export const semanticChunker = async (content: string) => {
