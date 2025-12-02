@@ -25,6 +25,7 @@ class SemanticChunker {
   public chunk(content: string) {
     const sentencesArray = this.splitContentIntoSentences(content);
     const sentenceMap = this.arrayToHashmap(sentencesArray);
+    const combinedNeighbours = this.combineNeighbours(1, sentenceMap);
   }
 
   private arrayToHashmap(sentences: string[]) {
@@ -35,11 +36,28 @@ class SemanticChunker {
   }
 
   private combineNeighbours(
-    n: number = 1, 
+    n: number, 
     sentenceMap: Record<number, string>
   ) {
 
-    Object.entries()
+    const entries = Object.entries(sentenceMap);
+
+    // get forward and previous entries within buffer
+   const combinedMap = Object.fromEntries(entries.map((entry, index) => {
+      const start = Math.max(0, index - n);
+      const end = Math.min(entries.length - 1, index + n);
+      const entriesWithinBuffer = entries.slice(start, end - 1);
+      return [
+          Number(entry[0]),
+          entriesWithinBuffer.map(([_, value]) => value).join(' ')
+        ];
+    }))
+
+    return Object.values(combinedMap).map(val => val);
+
+  }
+
+  private embedCombinedSentences() {
 
   }
 
