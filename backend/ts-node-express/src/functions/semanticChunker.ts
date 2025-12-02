@@ -1,8 +1,13 @@
-import { GoogleGenAI } from "@google/genai";
+import { EmbedContentResponse, GoogleGenAI } from "@google/genai";
 
 const gemini = new GoogleGenAI({
   apiKey: process.env.GEMINI_KEY!,
 })
+
+interface Sentence {
+    combined_sentence_embedding: number[];
+    distance_to_next?: number;
+}
 
 /**
  * 1. Split text into sentences
@@ -22,10 +27,12 @@ const gemini = new GoogleGenAI({
 
 class SemanticChunker {
 
-  public chunk(content: string) {
+  public async chunk(content: string) {
     const sentencesArray = this.splitContentIntoSentences(content);
     const sentenceMap = this.arrayToHashmap(sentencesArray);
     const combinedNeighbours = this.combineNeighbours(1, sentenceMap);
+    const embeddingsMap = await this.embedCombinedSentences(combinedNeighbours);
+
   }
 
   private arrayToHashmap(sentences: string[]) {
@@ -57,11 +64,62 @@ class SemanticChunker {
 
   }
 
-  private embedCombinedSentences() {
-
+  private async embedCombinedSentences(combinedStrings: string[]): Promise<Record<string, any>> {
+    const promises = combinedStrings.map(async (text) => {
+        const result = await gemini.models.embedContent({
+            model: 'text-embedding-004',
+            contents: [{
+                parts: [{ text }]
+            }],
+            config: {
+                taskType: "SEMANTIC_SIMILARITY",
+            }
+        });
+        return [text, result.embeddings];
+    });
+    
+    const entries = await Promise.all(promises);
+    return Object.fromEntries(entries);
   }
+
+  private calculateCosineDistances(sentences: Sentence[]): {
+    distances: number[];
+    sentences: Sentence[];
+} {
+    const pairs = sentences.slice(0, -1).map((_, i) => [sentences[i], sentences[i + 1]] as const);
+    
+    const distances = pairs.map(([curr, next]) =>
+        this.cosineSimilarity(
+            curr.combined_sentence_embedding,
+            next.combined_sentence_embedding
+        )
+    );
+
+    const sentencesWithDistances = sentences.map((sentence, i) => ({
+        ...sentence,
+        distance_to_next: distances[i]
+    }));
+
+    return { distances, sentences: sentencesWithDistances };
+}
 
   private splitContentIntoSentences(content: string) {
     return content.replace(/([.?!])\s*(?=[A-Z])/g, "$1|").split("|");
+  }
+
+  private cosineSimilarity(vecA: number[], vecB: number[]): number {
+    if (vecA.length !== vecB.length) {
+      throw new Error("Vectors must have the same dimensions");
+    }
+
+    const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+
+    const magnitudeA = Math.hypot(...vecA);
+    const magnitudeB = Math.hypot(...vecB);
+
+    if (magnitudeA === 0 || magnitudeB === 0) {
+      return 0;
+    }
+    return dotProduct / (magnitudeA * magnitudeB);
   }
 }
