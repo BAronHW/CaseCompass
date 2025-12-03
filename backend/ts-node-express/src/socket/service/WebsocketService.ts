@@ -31,10 +31,10 @@ async function authenticateSocket(socket: any, token: string) {
     }
 }
 
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
+
 export function websocketService() {
     io.on('connection', (socket) => {
-
-    const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI });
 
     socket.on('connect-to-chat-room', async ({ token }) => {
         try {

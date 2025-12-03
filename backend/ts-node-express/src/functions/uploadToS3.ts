@@ -66,6 +66,7 @@ export const uploadToS3 = async (jobData: UploadToS3JobData): Promise<UploadToS3
             apiKey: process.env.GEMINI_KEY!,
         })
 
+        // should process these in batches to avoid rate api rate limit
         const arrayOfEmbeddingsAndAssociatedChunks = await Promise.all(
             arrayOfChunkedDocs.map(async (chunk, index) => {
                 try {

@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { db } from "../lib/prismaContext.js";
 import crypt from 'crypto';
-import { LoginResult, Response, ServiceResponse, SuccessResponse } from "../models/models.js";
+import { LoginResult, Response, ServiceResponse } from "../models/models.js";
 import jwt from "jsonwebtoken";
 
 export class AuthService {
@@ -133,8 +133,6 @@ export class AuthService {
             name: user.name ?? '',
             email: user.email,
             uid: user.uid,
-            password: user.password,
-            refreshToken: user.refreshToken,
             id: user.id
         };
 

@@ -116,32 +116,61 @@ export const loginUser = async (req: Request, res: Response) => {
     }
 };
 
-export const refresh = async (req: Request, res: Response) => {
-
+export const refresh = async (req: Request, res: Response): Promise<void> => {
     try {
         const refreshToken = req.cookies.refreshToken;
-        if(!refreshToken){
-            res.status(400).json({message: "missing refresh token"});
-            return
+        if (!refreshToken) {
+            res.status(401).json({ success: false, error: "Missing refresh token" });
+            return;
         }
-        const jwtSecret = process.env.JWT_SECRET as string;
-        const isValidRefreshToken = jwt.verify(refreshToken, jwtSecret);
-        if(!isValidRefreshToken){
-            res.status(400).json({message: "invalid refresh token"});
-            return
-        }
-        
-        // @ts-ignore
-        const user = isValidRefreshToken.userForToken;
-        const newAccessToken = jwt.sign({ user }, jwtSecret as string, { expiresIn: '1h' });
-        res.status(200).json({newAccessToken});
-        return
-    } catch (error) {
-        res.status(400).json({error})
-        return
-    }
 
-} 
+        const jwtSecret = process.env.JWT_SECRET;
+        if (!jwtSecret) {
+            res.status(500).json({ success: false, error: "Server configuration error" });
+            return;
+        }
+
+        const decoded = (() => {
+            try {
+                return jwt.verify(refreshToken, jwtSecret) as { userForToken: { id: number; email: string } };
+            } catch {
+                return null;
+            }
+        })();
+
+        if (!decoded) {
+            res.status(401).json({ success: false, error: "Invalid refresh token" });
+            return;
+        }
+
+        const user = await db.user.findUnique({
+            where: { id: decoded.userForToken.id }
+        });
+
+        if (!user || user.refreshToken !== refreshToken) {
+            res.status(401).json({ success: false, error: "Token revoked or invalid" });
+            return;
+        }
+
+        const newAccessToken = jwt.sign(
+            { userForToken: { id: user.id, email: user.email } },
+            jwtSecret,
+            { expiresIn: '1h' }
+        );
+
+        res.cookie('Authorization', newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 60 * 60 * 1000
+        })
+        .status(200)
+        .json({ success: true, message: 'Token refreshed' });
+
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+};
 
 export const logout = (req: Request, res: Response, next: NextFunction) => {
     try {
