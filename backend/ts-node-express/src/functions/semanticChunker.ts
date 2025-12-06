@@ -1,15 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { Document } from "@langchain/core/documents";
-
-const gemini = new GoogleGenAI({
-  apiKey: process.env.GEMINI_KEY!,
-})
-
-interface Sentence {
-    text?: string;
-    combined_sentence_embedding?: number[];
-    distance_to_next?: number;
-}
+import { Sentence } from "../models/models.js";
 
 /**
  * 1. Split text into sentences

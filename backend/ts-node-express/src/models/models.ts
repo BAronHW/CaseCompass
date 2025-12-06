@@ -146,3 +146,10 @@ export interface OCRResult {
 export interface SentenceMap {
   [key: number]: string;
 }
+
+
+export interface Sentence {
+    text?: string;
+    combined_sentence_embedding?: number[];
+    distance_to_next?: number;
+}
