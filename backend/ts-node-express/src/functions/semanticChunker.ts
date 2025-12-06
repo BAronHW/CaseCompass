@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { Document } from "@langchain/core/documents";
 import { Sentence } from "../models/models.js";
+import { BatchHandler } from "../lib/BatchHandler.js";
 
 /**
  * 1. Split text into sentences
@@ -21,9 +22,11 @@ import { Sentence } from "../models/models.js";
 export class SemanticChunker {
 
   private genAI;
+  private batchHandler;
 
   constructor(apiKey: string) {
     this.genAI = new GoogleGenAI({ apiKey });
+    this.batchHandler = new BatchHandler(10, this.genAI);
   }
 
   public async chunk(content: string) {
@@ -69,28 +72,20 @@ export class SemanticChunker {
   }
 
   private async embedCombinedSentences(combinedStrings: string[]): Promise<Record<string, Sentence>> {
-    const promises = combinedStrings.map(async (text, index) => {
-        const result = await this.genAI.models.embedContent({
-            model: 'text-embedding-004',
-            contents: [{
-                parts: [{ text }]
-            }],
-            config: {
-                taskType: "SEMANTIC_SIMILARITY",
-            }
-        });
+        this.batchHandler.clear();
+        this.batchHandler.addMany(combinedStrings);
+        const results = await this.batchHandler.process();
 
-        const obj: Sentence = {
-          text,
-          combined_sentence_embedding: result.embeddings![0].values
-        }
-
-        return [index, obj];
-    });
-    
-    const entries = await Promise.all(promises);
-    return Object.fromEntries(entries);
-  }
+        return Object.fromEntries(
+            combinedStrings.map((text, index) => [
+                index,
+                {
+                    text,
+                    combined_sentence_embedding: results[index].embeddings![0].values
+                } as Sentence
+            ])
+        );
+    }
 
   private calculateDistances(embeddingsMap: Record<number, Sentence>): number[] {
     const sentences = Object.values(embeddingsMap);
