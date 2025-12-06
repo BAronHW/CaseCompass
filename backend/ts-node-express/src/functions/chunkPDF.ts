@@ -6,25 +6,18 @@
 
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { Document } from "@langchain/core/documents";
+import { SemanticChunker } from "./semanticChunker.js";
+import dotenv from 'dotenv';
 
 export async function ChunkPDF(docs: Document<Record<string, any>>[]): Promise<Document[]> {
     try {
-
-        const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize: 1024,
-            chunkOverlap: 20,
-        });
+        const semanticChunker = new SemanticChunker(process.env.GEMINI_KEY as string);
 
         const chunkedDocuments = await Promise.all(
-            docs.map(async (doc) => {
-                return await splitter.splitDocuments([
-                    new Document({
-                        pageContent: doc.pageContent,
-                        metadata: { ...doc.metadata }
-                    })
-                ]);
-            })
+            docs.map(doc => semanticChunker.chunk(doc.pageContent))
         );
+
+        console.log(chunkedDocuments);
 
         return chunkedDocuments.flat();
 

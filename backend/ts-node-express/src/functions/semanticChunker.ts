@@ -1,11 +1,13 @@
-import { EmbedContentResponse, GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
+import { Document } from "@langchain/core/documents";
 
 const gemini = new GoogleGenAI({
   apiKey: process.env.GEMINI_KEY!,
 })
 
 interface Sentence {
-    combined_sentence_embedding: number[];
+    text?: string;
+    combined_sentence_embedding?: number[];
     distance_to_next?: number;
 }
 
@@ -25,14 +27,25 @@ interface Sentence {
  * Result: Text split at natural topic boundaries instead of arbitrary lengths
  */
 
-class SemanticChunker {
+export class SemanticChunker {
+
+  private genAI;
+
+  constructor(apiKey: string) {
+    this.genAI = new GoogleGenAI({ apiKey });
+  }
 
   public async chunk(content: string) {
     const sentencesArray = this.splitContentIntoSentences(content);
     const sentenceMap = this.arrayToHashmap(sentencesArray);
     const combinedNeighbours = this.combineNeighbours(1, sentenceMap);
     const embeddingsMap = await this.embedCombinedSentences(combinedNeighbours);
-
+    const distances = this.calculateDistances(embeddingsMap);
+    const threshold = this.percentile(distances, 95);
+    const breakpoints = this.findBreakPoints(embeddingsMap, threshold);
+    const chunks = this.createChunks(breakpoints, embeddingsMap);
+    const wrappedChunks = this.wrapChunksInDocs(chunks);
+    return wrappedChunks
   }
 
   private arrayToHashmap(sentences: string[]) {
@@ -52,8 +65,8 @@ class SemanticChunker {
     // get forward and previous entries within buffer
    const combinedMap = Object.fromEntries(entries.map((entry, index) => {
       const start = Math.max(0, index - n);
-      const end = Math.min(entries.length - 1, index + n);
-      const entriesWithinBuffer = entries.slice(start, end - 1);
+      const end = Math.min(entries.length, index + n + 1);
+      const entriesWithinBuffer = entries.slice(start, end);
       return [
           Number(entry[0]),
           entriesWithinBuffer.map(([_, value]) => value).join(' ')
@@ -64,9 +77,9 @@ class SemanticChunker {
 
   }
 
-  private async embedCombinedSentences(combinedStrings: string[]): Promise<Record<string, any>> {
-    const promises = combinedStrings.map(async (text) => {
-        const result = await gemini.models.embedContent({
+  private async embedCombinedSentences(combinedStrings: string[]): Promise<Record<string, Sentence>> {
+    const promises = combinedStrings.map(async (text, index) => {
+        const result = await this.genAI.models.embedContent({
             model: 'text-embedding-004',
             contents: [{
                 parts: [{ text }]
@@ -75,32 +88,64 @@ class SemanticChunker {
                 taskType: "SEMANTIC_SIMILARITY",
             }
         });
-        return [text, result.embeddings];
+
+        const obj: Sentence = {
+          text,
+          combined_sentence_embedding: result.embeddings![0].values
+        }
+
+        return [index, obj];
     });
     
     const entries = await Promise.all(promises);
     return Object.fromEntries(entries);
   }
 
-  private calculateCosineDistances(sentences: Sentence[]): {
-    distances: number[];
-    sentences: Sentence[];
-} {
-    const pairs = sentences.slice(0, -1).map((_, i) => [sentences[i], sentences[i + 1]] as const);
+  private calculateDistances(embeddingsMap: Record<number, Sentence>): number[] {
+    const sentences = Object.values(embeddingsMap);
     
-    const distances = pairs.map(([curr, next]) =>
-        this.cosineSimilarity(
-            curr.combined_sentence_embedding,
-            next.combined_sentence_embedding
-        )
-    );
+    return sentences.slice(0, -1).map((sentence, i) => {
+        const nextSentence = sentences[i + 1];
 
-    const sentencesWithDistances = sentences.map((sentence, i) => ({
-        ...sentence,
-        distance_to_next: distances[i]
-    }));
+        if (!sentence.combined_sentence_embedding || !nextSentence.combined_sentence_embedding) {
+            throw new Error(`Missing embedding at index ${i}`);
+        }
 
-    return { distances, sentences: sentencesWithDistances };
+        const similarity = this.cosineSimilarity(
+            sentence.combined_sentence_embedding,
+            nextSentence.combined_sentence_embedding
+        );
+
+        const distance = 1 - similarity;
+        
+        sentence.distance_to_next = distance;
+
+        return distance;
+    });
+  }
+
+  private findBreakPoints(embeddingsMap: Record<number, Sentence>, threshold: number) {
+    const sentences = Object.entries(embeddingsMap);
+    const index = sentences.filter(([index, sentence]) => {
+      return sentence.distance_to_next 
+        ? sentence.distance_to_next > threshold 
+        : false
+    })
+    .map(([index]) => Number(index) + 1);
+    return index
+  }
+
+  private createChunks(breakpoints: number[], embeddingsMap: Record<number, Sentence>): Sentence[][] {
+    const entries = Object.entries(embeddingsMap);
+    
+    const allBreakpoints = [0, ...breakpoints, entries.length];
+    
+    return allBreakpoints.slice(0, -1).map((startIndex, i) => {
+        const endIndex = allBreakpoints[i + 1];
+        return entries
+            .slice(startIndex, endIndex)
+            .map(([_, sentence]) => sentence);
+    });
 }
 
   private splitContentIntoSentences(content: string) {
@@ -122,4 +167,20 @@ class SemanticChunker {
     }
     return dotProduct / (magnitudeA * magnitudeB);
   }
+
+  private percentile(arr: number[], p: number): number {
+      if (arr.length === 0) return 0;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const index = Math.ceil((p / 100) * sorted.length) - 1;
+      return sorted[Math.max(0, index)];
+  }
+
+  private wrapChunksInDocs(chunks: Sentence[][]): Document[] {
+    return chunks.map((chunk) => {
+        const text = chunk.map(sentence => sentence.text).join(' ');
+        return new Document({
+            pageContent: text
+        });
+    });
+}
 }
