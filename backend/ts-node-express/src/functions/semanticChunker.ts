@@ -134,8 +134,21 @@ export class SemanticChunker {
     });
 }
 
-  private splitContentIntoSentences(content: string) {
-    return content.replace(/([.?!])\s*(?=[A-Z])/g, "$1|").split("|");
+  private splitContentIntoSentences(content: string): string[] {
+    const abbreviations = ['Dr', 'Mr', 'Mrs', 'Ms', 'Prof', 'Inc', 'Ltd', 'Jr', 'Sr', 'vs', 'etc', 'i.e', 'e.g'];
+    
+    let processed = content;
+    abbreviations.forEach(abbr => {
+      processed = processed.replace(new RegExp(`\\b${abbr}\\.`, 'gi'), `${abbr}<<<DOT>>>`);
+    });
+    
+    const sentences = processed
+      .replace(/([.?!])\s*(?=[A-Z])/g, "$1|")
+      .split("|")
+      .map(s => s.replace(/<<<DOT>>>/g, '.').trim())
+      .filter(s => s.length > 0);
+      
+    return sentences;
   }
 
   private cosineSimilarity(vecA: number[], vecB: number[]): number {
