@@ -8,10 +8,13 @@ import { SemanticChunker } from "./semanticChunker.js";
 export async function ChunkPDF(docs: Document<Record<string, any>>[]): Promise<Document[]> {
     try {
         const semanticChunker = new SemanticChunker(process.env.GEMINI_KEY as string);
-        // might need to batch this as well
-        const chunkedDocuments = await Promise.all(
-            docs.map(doc => semanticChunker.chunk(doc.pageContent))
-        );
+        // maybe I should chunk at this level instead of the lower levels
+        const chunkedDocuments = [];
+
+        for (const doc of docs) {
+            const res = await semanticChunker.chunk(doc.pageContent);
+            chunkedDocuments.push(res);
+        }
 
         return chunkedDocuments.flat();
 
