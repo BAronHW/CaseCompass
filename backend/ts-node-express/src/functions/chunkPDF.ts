@@ -5,21 +5,36 @@ import { SemanticChunker } from "./semanticChunker.js";
     try and load the file from the temp file path 
     once loaded delete the tempfile path
  */
-export async function ChunkPDF(docs: Document<Record<string, any>>[]): Promise<Document[]> {
-    try {
-        const semanticChunker = new SemanticChunker(process.env.GEMINI_KEY as string);
-        // maybe I should chunk at this level instead of the lower levels
-        const chunkedDocuments = [];
+export async function ChunkPDF(
+  docs: Document<Record<string, any>>[],
+  concurrency: number = 3
+): Promise<Document[]> {
+  try {
+    const semanticChunker = new SemanticChunker(process.env.GEMINI_KEY as string);
+    const results: Document[] = [];
 
-        for (const doc of docs) {
-            const res = await semanticChunker.chunk(doc.pageContent);
-            chunkedDocuments.push(res);
-        }
-
-        return chunkedDocuments.flat();
-
-    } catch (error) {
-        console.log('Error processing PDF Buffer: ', error);
-        throw error;
+    for (let i = 0; i < docs.length; i += concurrency) {
+      const batch = docs.slice(i, i + concurrency);
+      
+      const batchResults = await Promise.all(
+        batch.map(doc => semanticChunker.chunk(doc.pageContent))
+      );
+      
+      results.push(...batchResults.flat());
+      
+      if (i + concurrency < docs.length) {
+        await sleep(100);
+      }
     }
+
+    return results;
+
+  } catch (error) {
+    console.log('Error processing PDF Buffer: ', error);
+    throw error;
+  }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
