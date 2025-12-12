@@ -1,22 +1,17 @@
 import { GoogleGenAI } from "@google/genai";
 import { db } from "../lib/prismaContext.js";
 import { DocumentChunk } from "../interfaces/DocumentChunk.js";
+import { LocalLLM } from "../lib/LocalLLM.js";
 
 export async function chunkRetrieval(numberOfNearestNeighbours: number, messageBody: string, genAI: GoogleGenAI): Promise<DocumentChunk[]> {
     if (typeof numberOfNearestNeighbours !== 'number') {
         throw new Error('numberOfNearestNeighbours needs to be a number');
     }
-    const messageBodyEmbedding = await genAI.models.embedContent({
-        model: 'text-embedding-004',
-        contents: [{
-            parts: [{ text: messageBody }]
-        }],
-        config: {
-            taskType: "SEMANTIC_SIMILARITY",
-        }
-    });
+
+    const localLLM = new LocalLLM();
+    const messageBodyEmbedding = await localLLM.getEmbeddings(messageBody);
     
-    const embeddingArray = messageBodyEmbedding.embeddings?.[0]?.values;
+    const embeddingArray = messageBodyEmbedding
 
     if (!embeddingArray || !Array.isArray(embeddingArray)) {
         throw new Error('Invalid embedding format');

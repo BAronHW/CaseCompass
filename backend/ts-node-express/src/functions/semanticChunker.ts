@@ -2,6 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { Document } from "@langchain/core/documents";
 import { Sentence } from "../models/models.js";
 import { BatchHandler } from "../lib/BatchHandler.js";
+import { LocalLLM } from "../lib/LocalLLM.js";
 
 /**
  * 1. Split text into sentences
@@ -25,7 +26,7 @@ export class SemanticChunker {
   private batchHandler;
 
   constructor(apiKey: string) {
-    this.genAI = new GoogleGenAI({ apiKey });
+    this.genAI = new LocalLLM()
     this.batchHandler = new BatchHandler(10, this.genAI);
   }
 

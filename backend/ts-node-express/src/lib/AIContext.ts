@@ -7,9 +7,7 @@ export abstract class AiContext {
         this.modelName = modelName;
     }
 
-    public async embeddString() {}
-
-    public async getEmbeddings(inputText: string){}
+    abstract getEmbeddings(inputText: string): Promise<any>
 
     public getClient(){
         return this.client;
